@@ -6,10 +6,10 @@ from scipy.ndimage.filters import gaussian_filter
 import numpy as np
 import pdb
 
-from arclines import io as arcl_io
-from arclines.holy import patterns as arch_patt
-from arclines.holy import fitting as arch_fit
-from arclines.holy import utils as arch_utils
+from pypeit.core.wavecal import waveio
+from pypeit.core.wavecal import patterns
+from pypeit.core.wavecal import fitting
+from pypeit.core.wavecal import utils
 
 
 def basic(spec, lines, wv_cen, disp, siglev=20., min_ampl=300.,
@@ -42,18 +42,18 @@ def basic(spec, lines, wv_cen, disp, siglev=20., min_ampl=300.,
     npix = spec.size
     wave = wv_cen + (np.arange(npix) - npix/2.)*disp
 
-    line_lists = arcl_io.load_line_lists(lines, unknown=True)
+    line_lists = waveio.load_line_lists(lines, unknown=True)
     wvdata = line_lists['wave'].data  # NIST + Extra
     isrt = np.argsort(wvdata)
     wvdata = wvdata[isrt]
 
     # Find peaks
-    all_tcent, cut_tcent, icut = arch_utils.arc_lines_from_spec(spec, min_ampl=min_ampl)
+    all_tcent, cut_tcent, icut = utils.arc_lines_from_spec(spec, min_ampl=min_ampl)
 
     # Matching
-    match_idx, scores = arch_patt.run_quad_match(cut_tcent, wave, wvdata,
-                                                 disp, swv_uncertainty=swv_uncertainty,
-                                                 pix_tol=pix_tol)
+    match_idx, scores = patterns.run_quad_match(cut_tcent, wave, wvdata,
+                                                disp, swv_uncertainty=swv_uncertainty,
+                                                pix_tol=pix_tol)
 
     # Check quadrants
     xquad = npix//4 + 1
@@ -89,8 +89,8 @@ def basic(spec, lines, wv_cen, disp, siglev=20., min_ampl=300.,
     # Fit
     NIST_lines = line_lists['NIST'] > 0
     ifit = np.where(mask)[0]
-    final_fit = arch_fit.iterative_fitting(spec, all_tcent, ifit,
-                               IDs, line_lists[NIST_lines], disp, plot_fil=plot_fil)
+    final_fit = fitting.iterative_fitting(spec, all_tcent, ifit,
+                                          IDs, line_lists[NIST_lines], disp, plot_fil=plot_fil)
     # Return
     status = 1
     return status, ngd_match, match_idx, scores, final_fit
@@ -127,13 +127,13 @@ def semi_brute(spec, lines, wv_cen, disp, min_ampl=300.,
     from linetools import utils as ltu
     from arclines import plots as arcl_plots
     # Load line lists
-    line_lists = arcl_io.load_line_lists(lines)
-    unknwns = arcl_io.load_unknown_list(lines)
+    line_lists = waveio.load_line_lists(lines)
+    unknwns = waveio.load_unknown_list(lines)
 
     npix = spec.size
 
     # Lines
-    all_tcent, cut_tcent, icut = arch_utils.arc_lines_from_spec(spec, min_ampl=min_ampl)
+    all_tcent, cut_tcent, icut = utils.arc_lines_from_spec(spec, min_ampl=min_ampl)
 
     # Best
     best_dict = dict(nmatch=0, ibest=-1, bwv=0., min_ampl=min_ampl, unknown=False,
@@ -158,7 +158,7 @@ def semi_brute(spec, lines, wv_cen, disp, min_ampl=300.,
         # Loop on pix_tol
         for pix_tol in [1.,2.]:
             # Scan on wavelengths
-            arch_patt.scan_for_matches(wv_cen, disp, npix, cut_tcent, wvdata,
+            patterns.scan_for_matches(wv_cen, disp, npix, cut_tcent, wvdata,
                                       best_dict=best_dict, pix_tol=pix_tol)
             # Lower minimum amplitude
             ampl = min_ampl
@@ -167,9 +167,9 @@ def semi_brute(spec, lines, wv_cen, disp, min_ampl=300.,
                 ampl /= 2.
                 if ampl < lowest_ampl:
                     break
-                all_tcent, cut_tcent, icut = arch_utils.arc_lines_from_spec(spec, min_ampl=ampl)
-                arch_patt.scan_for_matches(wv_cen, disp, npix, cut_tcent, wvdata,
-                                       best_dict=best_dict, pix_tol=pix_tol, ampl=ampl)
+                all_tcent, cut_tcent, icut = utils.arc_lines_from_spec(spec, min_ampl=ampl)
+                patterns.scan_for_matches(wv_cen, disp, npix, cut_tcent, wvdata,
+                                          best_dict=best_dict, pix_tol=pix_tol, ampl=ampl)
 
         #if debug:
         #    pdb.set_trace()
@@ -189,9 +189,9 @@ def semi_brute(spec, lines, wv_cen, disp, min_ampl=300.,
     wvdata.sort()
     tmp_dict = best_dict.copy()
     tmp_dict['nmatch'] = 0
-    arch_patt.scan_for_matches(best_dict['bwv'], disp, npix, cut_tcent, wvdata,
-                               best_dict=tmp_dict, pix_tol=best_dict['pix_tol'],
-                               ampl=best_dict['ampl'], wvoff=1.)
+    patterns.scan_for_matches(best_dict['bwv'], disp, npix, cut_tcent, wvdata,
+                              best_dict=tmp_dict, pix_tol=best_dict['pix_tol'],
+                              ampl=best_dict['ampl'], wvoff=1.)
     for kk,ID in enumerate(tmp_dict['IDs']):
         if (ID > 0.) and (best_dict['IDs'][kk] == 0.):
             best_dict['IDs'][kk] = ID
@@ -249,7 +249,7 @@ def semi_brute(spec, lines, wv_cen, disp, min_ampl=300.,
     if do_fit:
         '''
         # Read in Full NIST Tables
-        full_NIST = arcl_io.load_line_lists(lines, NIST=True)
+        full_NIST = waveio.load_line_lists(lines, NIST=True)
         # KLUDGE!!!!!
         keep = full_NIST['wave'] > 8800.
         pdb.set_trace()
@@ -269,7 +269,7 @@ def semi_brute(spec, lines, wv_cen, disp, min_ampl=300.,
                 imsk[kk] = False
         ifit = ifit[imsk]
         # Allow for weaker lines in the fit
-        all_tcent, weak_cut_tcent, icut = arch_utils.arc_lines_from_spec(spec, min_ampl=lowest_ampl)
+        all_tcent, weak_cut_tcent, icut = utils.arc_lines_from_spec(spec, min_ampl=lowest_ampl)
         add_weak = []
         for weak in weak_cut_tcent:
             if np.min(np.abs(cut_tcent-weak)) > 5.:
@@ -277,9 +277,9 @@ def semi_brute(spec, lines, wv_cen, disp, min_ampl=300.,
         if len(add_weak) > 0:
             cut_tcent = np.concatenate([cut_tcent, np.array(add_weak)])
         # Fit
-        final_fit = arch_fit.iterative_fitting(spec, cut_tcent, ifit,
-                                               np.array(best_dict['IDs'])[ifit], line_lists[NIST_lines],
-                                               disp, plot_fil=plot_fil, verbose=verbose, aparm=fit_parm)
+        final_fit = fitting.iterative_fitting(spec, cut_tcent, ifit,
+                                              np.array(best_dict['IDs'])[ifit], line_lists[NIST_lines],
+                                              disp, plot_fil=plot_fil, verbose=verbose, aparm=fit_parm)
         if plot_fil is not None:
             print("Wrote: {:s}".format(plot_fil))
 
@@ -320,13 +320,13 @@ def general(spec, lines, min_ampl=300.,
     from arclines.holy.patterns import triangles
 
     # Load line lists
-    line_lists = arcl_io.load_line_lists(lines)
-    unknwns = arcl_io.load_unknown_list(lines)
+    line_lists = waveio.load_line_lists(lines)
+    unknwns = waveio.load_unknown_list(lines)
 
     npix = spec.size
 
     # Lines
-    all_tcent, cut_tcent, icut = arch_utils.arc_lines_from_spec(spec, min_ampl=min_ampl)
+    all_tcent, cut_tcent, icut = utils.arc_lines_from_spec(spec, min_ampl=min_ampl)
     use_tcent = all_tcent.copy()
     #use_tcent = cut_tcent.copy()  # min_ampl is having not effect at present
 
@@ -389,7 +389,7 @@ def general(spec, lines, min_ampl=300.,
             lindex = lindex[wgd[0], :].flatten()
 
             # Given this solution, fit for all detlines
-            arch_patt.solve_triangles(use_tcent, wvdata, dindex, lindex, best_dict)
+            patterns.solve_triangles(use_tcent, wvdata, dindex, lindex, best_dict)
             if best_dict['nmatch'] > sav_nmatch:
                 best_dict['pix_tol'] = pix_tol
 
@@ -462,7 +462,7 @@ def general(spec, lines, min_ampl=300.,
                 imsk[kk] = False
         ifit = ifit[imsk]
         # Allow for weaker lines in the fit
-        all_tcent, weak_cut_tcent, icut = arch_utils.arc_lines_from_spec(spec, min_ampl=lowest_ampl)
+        all_tcent, weak_cut_tcent, icut = utils.arc_lines_from_spec(spec, min_ampl=lowest_ampl)
         use_weak_tcent = all_tcent.copy()
         add_weak = []
         for weak in use_weak_tcent:
@@ -471,10 +471,10 @@ def general(spec, lines, min_ampl=300.,
         if len(add_weak) > 0:
             use_tcent = np.concatenate([use_tcent, np.array(add_weak)])
         # Fit
-        final_fit = arch_fit.iterative_fitting(spec, use_tcent, ifit,
-                                               np.array(best_dict['IDs'])[ifit], line_lists[good_lines],
-                                               best_dict['bdisp'], plot_fil=plot_fil, verbose=verbose,
-                                               aparm=fit_parm)
+        final_fit = fitting.iterative_fitting(spec, use_tcent, ifit,
+                                              np.array(best_dict['IDs'])[ifit], line_lists[good_lines],
+                                              best_dict['bdisp'], plot_fil=plot_fil, verbose=verbose,
+                                              aparm=fit_parm)
         if plot_fil is not None:
             print("Wrote: {:s}".format(plot_fil))
 
