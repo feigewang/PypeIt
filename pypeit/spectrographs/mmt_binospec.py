@@ -1,6 +1,8 @@
 '''
 Implements DEIMOS-specific functions, including reading in slitmask design files.
 '''
+
+## ToDo: TBD by Feige
 from __future__ import absolute_import, division, print_function
 
 import glob
@@ -23,168 +25,170 @@ from pypeit.spectrographs.opticalmodel import ReflectionGrating, OpticalModel, D
 
 from pypeit import debugger
 
-class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
+
+class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
     """
     Child to handle Keck/DEIMOS specific code
     """
+
     def __init__(self):
         # Get it started
-        super(KeckDEIMOSSpectrograph, self).__init__()
-        self.spectrograph = 'keck_deimos'
+        super(MMTBINOSPECSpectrograph, self).__init__()
+        self.spectrograph = 'mmt_binospec'
         self.telescope = telescopes.KeckTelescopePar()
-        self.camera = 'DEIMOS'
+        self.camera = 'BINOSPEC'
         self.detector = [
-                # Detector 1
-                pypeitpar.DetectorPar(
-                            dataext         = 1,
-                            dispaxis        = 0,
-                            dispflip        = False,
-                            xgap            = 0.,
-                            ygap            = 0.,
-                            ysize           = 1.,
-                            platescale      = 0.1185,
-                            darkcurr        = 4.19,
-                            saturation      = 65535.,
-                            nonlinear       = 0.86,
-                            numamplifiers   = 1,
-                            gain            = 1.226,
-                            ronoise         = 2.570,
-                            datasec         = '',       # These are provided by read_deimos
-                            oscansec        = '',
-                            suffix          = '_01'
-                            ),
-                # Detector 2
-                pypeitpar.DetectorPar(
-                            dataext         = 2,
-                            dispaxis        = 0,
-                            dispflip        = False,
-                            xgap            = 0.,
-                            ygap            = 0.,
-                            ysize           = 1.,
-                            platescale      = 0.1185,
-                            darkcurr        = 3.46,
-                            saturation      = 65535.,
-                            nonlinear       = 0.86,
-                            numamplifiers   = 1,
-                            gain            = 1.188,
-                            ronoise         = 2.491,
-                            datasec         = '',       # These are provided by read_deimos
-                            oscansec        = '',
-                            suffix          = '_02'
-                            ),
-                # Detector 3
-                pypeitpar.DetectorPar(
-                            dataext         = 3,
-                            dispaxis        = 0,
-                            dispflip        = False,
-                            xgap            = 0.,
-                            ygap            = 0.,
-                            ysize           = 1.,
-                            platescale      = 0.1185,
-                            darkcurr        = 4.03,
-                            saturation      = 65535.,
-                            nonlinear       = 0.86,
-                            numamplifiers   = 1,
-                            gain            = 1.248,
-                            ronoise         = 2.618,
-                            datasec         = '',       # These are provided by read_deimos
-                            oscansec        = '',
-                            suffix          = '_03'
-                            ),
-                # Detector 4
-                pypeitpar.DetectorPar(
-                            dataext         = 4,
-                            dispaxis        = 0,
-                            dispflip        = False,
-                            xgap            = 0.,
-                            ygap            = 0.,
-                            ysize           = 1.,
-                            platescale      = 0.1185,
-                            darkcurr        = 3.80,
-                            saturation      = 65535.,
-                            nonlinear       = 0.86,
-                            numamplifiers   = 1,
-                            gain            = 1.220,
-                            ronoise         = 2.557,
-                            datasec         = '',       # These are provided by read_deimos
-                            oscansec        = '',
-                            suffix          = '_04'
-                            ),
-                # Detector 5
-                pypeitpar.DetectorPar(
-                            dataext         = 5,
-                            dispaxis        = 0,
-                            dispflip        = False,
-                            xgap            = 0.,
-                            ygap            = 0.,
-                            ysize           = 1.,
-                            platescale      = 0.1185,
-                            darkcurr        = 4.71,
-                            saturation      = 65535.,
-                            nonlinear       = 0.86,
-                            numamplifiers   = 1,
-                            gain            = 1.184,
-                            ronoise         = 2.482,
-                            datasec         = '',       # These are provided by read_deimos
-                            oscansec        = '',
-                            suffix          = '_05'
-                            ),
-                # Detector 6
-                pypeitpar.DetectorPar(
-                            dataext         = 6,
-                            dispaxis        = 0,
-                            dispflip        = False,
-                            xgap            = 0.,
-                            ygap            = 0.,
-                            ysize           = 1.,
-                            platescale      = 0.1185,
-                            darkcurr        = 4.28,
-                            saturation      = 65535.,
-                            nonlinear       = 0.86,
-                            numamplifiers   = 1,
-                            gain            = 1.177,
-                            ronoise         = 2.469,
-                            datasec         = '',       # These are provided by read_deimos
-                            oscansec        = '',
-                            suffix          = '_06'
-                            ),
-                # Detector 7
-                pypeitpar.DetectorPar(
-                            dataext         = 7,
-                            dispaxis        = 0,
-                            dispflip        = False,
-                            xgap            = 0.,
-                            ygap            = 0.,
-                            ysize           = 1.,
-                            platescale      = 0.1185,
-                            darkcurr        = 3.33,
-                            saturation      = 65535.,
-                            nonlinear       = 0.86,
-                            numamplifiers   = 1,
-                            gain            = 1.201,
-                            ronoise         = 2.518,
-                            datasec         = '',       # These are provided by read_deimos
-                            oscansec        = '',
-                            suffix          = '_07'),
-                # Detector 8
-                pypeitpar.DetectorPar(
-                            dataext         = 8,
-                            dispaxis        = 0,
-                            dispflip        = False,
-                            xgap            = 0.,
-                            ygap            = 0.,
-                            ysize           = 1., 
-                            platescale      = 0.1185,
-                            darkcurr        = 3.69,
-                            saturation      = 65535.,
-                            nonlinear       = 0.86,
-                            numamplifiers   = 1,
-                            gain            = 1.230,
-                            ronoise         = 2.580,
-                            datasec         = '',       # These are provided by read_deimos
-                            oscansec        = '',
-                            suffix          = '_08'
-                            )]
+            # Detector 1
+            pypeitpar.DetectorPar(
+                dataext=1,
+                dispaxis=0,
+                dispflip=False,
+                xgap=0.,
+                ygap=0.,
+                ysize=1.,
+                platescale=0.1185,
+                darkcurr=4.19,
+                saturation=65535.,
+                nonlinear=0.86,
+                numamplifiers=1,
+                gain=1.226,
+                ronoise=2.570,
+                datasec='',  # These are provided by read_deimos
+                oscansec='',
+                suffix='_01'
+            ),
+            # Detector 2
+            pypeitpar.DetectorPar(
+                dataext=2,
+                dispaxis=0,
+                dispflip=False,
+                xgap=0.,
+                ygap=0.,
+                ysize=1.,
+                platescale=0.1185,
+                darkcurr=3.46,
+                saturation=65535.,
+                nonlinear=0.86,
+                numamplifiers=1,
+                gain=1.188,
+                ronoise=2.491,
+                datasec='',  # These are provided by read_deimos
+                oscansec='',
+                suffix='_02'
+            ),
+            # Detector 3
+            pypeitpar.DetectorPar(
+                dataext=3,
+                dispaxis=0,
+                dispflip=False,
+                xgap=0.,
+                ygap=0.,
+                ysize=1.,
+                platescale=0.1185,
+                darkcurr=4.03,
+                saturation=65535.,
+                nonlinear=0.86,
+                numamplifiers=1,
+                gain=1.248,
+                ronoise=2.618,
+                datasec='',  # These are provided by read_deimos
+                oscansec='',
+                suffix='_03'
+            ),
+            # Detector 4
+            pypeitpar.DetectorPar(
+                dataext=4,
+                dispaxis=0,
+                dispflip=False,
+                xgap=0.,
+                ygap=0.,
+                ysize=1.,
+                platescale=0.1185,
+                darkcurr=3.80,
+                saturation=65535.,
+                nonlinear=0.86,
+                numamplifiers=1,
+                gain=1.220,
+                ronoise=2.557,
+                datasec='',  # These are provided by read_deimos
+                oscansec='',
+                suffix='_04'
+            ),
+            # Detector 5
+            pypeitpar.DetectorPar(
+                dataext=5,
+                dispaxis=0,
+                dispflip=False,
+                xgap=0.,
+                ygap=0.,
+                ysize=1.,
+                platescale=0.1185,
+                darkcurr=4.71,
+                saturation=65535.,
+                nonlinear=0.86,
+                numamplifiers=1,
+                gain=1.184,
+                ronoise=2.482,
+                datasec='',  # These are provided by read_deimos
+                oscansec='',
+                suffix='_05'
+            ),
+            # Detector 6
+            pypeitpar.DetectorPar(
+                dataext=6,
+                dispaxis=0,
+                dispflip=False,
+                xgap=0.,
+                ygap=0.,
+                ysize=1.,
+                platescale=0.1185,
+                darkcurr=4.28,
+                saturation=65535.,
+                nonlinear=0.86,
+                numamplifiers=1,
+                gain=1.177,
+                ronoise=2.469,
+                datasec='',  # These are provided by read_deimos
+                oscansec='',
+                suffix='_06'
+            ),
+            # Detector 7
+            pypeitpar.DetectorPar(
+                dataext=7,
+                dispaxis=0,
+                dispflip=False,
+                xgap=0.,
+                ygap=0.,
+                ysize=1.,
+                platescale=0.1185,
+                darkcurr=3.33,
+                saturation=65535.,
+                nonlinear=0.86,
+                numamplifiers=1,
+                gain=1.201,
+                ronoise=2.518,
+                datasec='',  # These are provided by read_deimos
+                oscansec='',
+                suffix='_07'),
+            # Detector 8
+            pypeitpar.DetectorPar(
+                dataext=8,
+                dispaxis=0,
+                dispflip=False,
+                xgap=0.,
+                ygap=0.,
+                ysize=1.,
+                platescale=0.1185,
+                darkcurr=3.69,
+                saturation=65535.,
+                nonlinear=0.86,
+                numamplifiers=1,
+                gain=1.230,
+                ronoise=2.580,
+                datasec='',  # These are provided by read_deimos
+                oscansec='',
+                suffix='_08'
+            )]
         self.numhead = 9
         # Uses default timeunit
         # Uses default primary_hdrext
@@ -205,18 +209,19 @@ class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
         par['calibrations']['slits']['sigdetect'] = 50.
         par['calibrations']['slits']['polyorder'] = 3
         par['calibrations']['slits']['fracignore'] = 0.02
-        par['calibrations']['slits']['pcapar'] = [3,2,1,0]
+        par['calibrations']['slits']['pcapar'] = [3, 2, 1, 0]
 
         # Overscan subtract the images
         par['calibrations']['biasframe']['useframe'] = 'overscan'
 
         # 1D wavelength solution
-        par['calibrations']['wavelengths']['lamps'] = ['ArI','NeI','KrI','XeI']
-        par['calibrations']['wavelengths']['nonlinear_counts'] = self.detector[0]['nonlinear'] * self.detector[0]['saturation']
+        par['calibrations']['wavelengths']['lamps'] = ['ArI', 'NeI', 'KrI', 'XeI']
+        par['calibrations']['wavelengths']['nonlinear_counts'] = self.detector[0]['nonlinear'] * self.detector[0][
+            'saturation']
 
         # Alter the method used to combine pixel flats
         par['calibrations']['pixelflatframe']['process']['combine'] = 'median'
-        par['calibrations']['pixelflatframe']['process']['sig_lohi'] = [10.,10.]
+        par['calibrations']['pixelflatframe']['process']['sig_lohi'] = [10., 10.]
 
         # Scienceimage default parameters
         par['scienceimage'] = pypeitpar.ScienceImagePar()
@@ -227,12 +232,12 @@ class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
 
         # Set the default exposure time ranges for the frame typing
         par['calibrations']['biasframe']['exprng'] = [None, 2]
-        par['calibrations']['darkframe']['exprng'] = [999999, None]     # No dark frames
+        par['calibrations']['darkframe']['exprng'] = [999999, None]  # No dark frames
         par['calibrations']['pinholeframe']['exprng'] = [999999, None]  # No pinhole frames
         par['calibrations']['pixelflatframe']['exprng'] = [None, 30]
         par['calibrations']['traceframe']['exprng'] = [None, 30]
         par['scienceframe']['exprng'] = [30, None]
-        
+
         # LACosmics parameters
         par['scienceframe']['process']['sigclip'] = 4.0
         par['scienceframe']['process']['objlim'] = 1.5
@@ -250,32 +255,32 @@ class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
             headers (list):
                 A list of headers read from a fits file
         """
-        expected_values = { '0.INSTRUME': 'DEIMOS',
-                               '1.NAXIS': 2,
-                               '2.NAXIS': 2,
-                               '3.NAXIS': 2,
-                               '4.NAXIS': 2,
-                               '5.NAXIS': 2,
-                               '6.NAXIS': 2,
-                               '7.NAXIS': 2,
-                               '8.NAXIS': 2,
-                             '1.CCDGEOM': 'MIT/LL 2k*4k',
-                             '2.CCDGEOM': 'MIT/LL 2k*4k',
-                             '3.CCDGEOM': 'MIT/LL 2k*4k',
-                             '4.CCDGEOM': 'MIT/LL 2k*4k',
-                             '5.CCDGEOM': 'MIT/LL 2k*4k',
-                             '6.CCDGEOM': 'MIT/LL 2k*4k',
-                             '7.CCDGEOM': 'MIT/LL 2k*4k',
-                             '8.CCDGEOM': 'MIT/LL 2k*4k',
-                             '1.CCDNAME': '14-2-6',
-                             '2.CCDNAME': '14-12-3',
-                             '3.CCDNAME': '14-10-6',
-                             '4.CCDNAME': '14-10-5',
-                             '5.CCDNAME': '14-4-1',
-                             '6.CCDNAME': '14-4-3',
-                             '7.CCDNAME': '14-4-2',
-                             '8.CCDNAME': '14-5-2' }
-        headers[0]['INSTRUME'] = headers[0]['INSTRUME'][:6] # To handle both 'fresh' and KOA data
+        expected_values = {'0.INSTRUME': 'DEIMOS',
+                           '1.NAXIS': 2,
+                           '2.NAXIS': 2,
+                           '3.NAXIS': 2,
+                           '4.NAXIS': 2,
+                           '5.NAXIS': 2,
+                           '6.NAXIS': 2,
+                           '7.NAXIS': 2,
+                           '8.NAXIS': 2,
+                           '1.CCDGEOM': 'MIT/LL 2k*4k',
+                           '2.CCDGEOM': 'MIT/LL 2k*4k',
+                           '3.CCDGEOM': 'MIT/LL 2k*4k',
+                           '4.CCDGEOM': 'MIT/LL 2k*4k',
+                           '5.CCDGEOM': 'MIT/LL 2k*4k',
+                           '6.CCDGEOM': 'MIT/LL 2k*4k',
+                           '7.CCDGEOM': 'MIT/LL 2k*4k',
+                           '8.CCDGEOM': 'MIT/LL 2k*4k',
+                           '1.CCDNAME': '14-2-6',
+                           '2.CCDNAME': '14-12-3',
+                           '3.CCDNAME': '14-10-6',
+                           '4.CCDNAME': '14-10-5',
+                           '5.CCDNAME': '14-4-1',
+                           '6.CCDNAME': '14-4-3',
+                           '7.CCDNAME': '14-4-2',
+                           '8.CCDNAME': '14-5-2'}
+        headers[0]['INSTRUME'] = headers[0]['INSTRUME'][:6]  # To handle both 'fresh' and KOA data
         super(KeckDEIMOSSpectrograph, self).check_headers(headers, expected_values=expected_values)
 
     def header_keys(self):
@@ -297,7 +302,7 @@ class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
         # Copied over defaults
         hdr_keys[0]['idname'] = 'OBSTYPE'
         hdr_keys[0]['time'] = 'MJD-OBS'
-        #hdr_keys[0]['date'] = 'DATE'
+        # hdr_keys[0]['date'] = 'DATE'
         hdr_keys[0]['utc'] = 'UTC'
         hdr_keys[0]['ra'] = 'RA'
         hdr_keys[0]['dec'] = 'DEC'
@@ -317,7 +322,7 @@ class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
         hdr_keys[0]['gratepos'] = 'GRATEPOS'
         hdr_keys[0]['g3tltwav'] = 'G3TLTWAV'
         hdr_keys[0]['g4tltwav'] = 'G4TLTWAV'
-#        hdr_keys[0]['dispangle'] = 'G3TLTWAV'   # TODO: This depends on the setup!
+        #        hdr_keys[0]['dispangle'] = 'G3TLTWAV'   # TODO: This depends on the setup!
 
         hdr_keys[1]['naxis0'] = 'NAXIS2'
         hdr_keys[1]['naxis1'] = 'NAXIS1'
@@ -334,7 +339,7 @@ class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
 
     def metadata_keys(self):
         return super(KeckDEIMOSSpectrograph, self).metadata_keys() \
-                    + ['binning', 'gratepos', 'dispangle']
+               + ['binning', 'gratepos', 'dispangle']
 
     def check_frame_type(self, ftype, fitstbl, exprng=None):
         """
@@ -372,16 +377,16 @@ class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
             type.
         """
         # TODO: Fill in the rest of these.
-        name = { 'arc': 'Line',
-                 'bias': None,
-                 'dark': None,
-                 'pinhole': None,
-                 'pixelflat': 'IntFlat',
-                 'science': 'Object',
-                 'standard': None,
-                 'trace': 'IntFlat' }
+        name = {'arc': 'Line',
+                'bias': None,
+                'dark': None,
+                'pinhole': None,
+                'pixelflat': 'IntFlat',
+                'science': 'Object',
+                'standard': None,
+                'trace': 'IntFlat'}
         return name[ftype]
-  
+
     def load_raw_img_head(self, raw_file, det=None, **null_kwargs):
         """
         Wrapper to the raw image reader for DEIMOS
@@ -442,7 +447,7 @@ class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
         This is done separately for the data section and the overscan
         section in case one is defined as a header keyword and the other
         is defined directly.
-        
+
         Args:
             filename (str):
                 data filename
@@ -494,43 +499,43 @@ class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
         """
         self.empty_bpm(filename=filename, det=det)
         if det == 1:
-            self.bpm_img[:,1052:1054] = 1
+            self.bpm_img[:, 1052:1054] = 1
         elif det == 2:
-            self.bpm_img[:,0:4] = 1
-            self.bpm_img[:,376:381] = 1
-            self.bpm_img[:,489] = 1
-            self.bpm_img[:,1333:1335] = 1
-            self.bpm_img[:,2047] = 1
+            self.bpm_img[:, 0:4] = 1
+            self.bpm_img[:, 376:381] = 1
+            self.bpm_img[:, 489] = 1
+            self.bpm_img[:, 1333:1335] = 1
+            self.bpm_img[:, 2047] = 1
         elif det == 3:
-            self.bpm_img[:,221] = 1
-            self.bpm_img[:,260] = 1
-            self.bpm_img[:,366] = 1
-            self.bpm_img[:,816:819] = 1
-            self.bpm_img[:,851] = 1
-            self.bpm_img[:,940] = 1
-            self.bpm_img[:,1167] = 1
-            self.bpm_img[:,1280] = 1
-            self.bpm_img[:,1301:1303] = 1
-            self.bpm_img[:,1744:1747] = 1
+            self.bpm_img[:, 221] = 1
+            self.bpm_img[:, 260] = 1
+            self.bpm_img[:, 366] = 1
+            self.bpm_img[:, 816:819] = 1
+            self.bpm_img[:, 851] = 1
+            self.bpm_img[:, 940] = 1
+            self.bpm_img[:, 1167] = 1
+            self.bpm_img[:, 1280] = 1
+            self.bpm_img[:, 1301:1303] = 1
+            self.bpm_img[:, 1744:1747] = 1
         elif det == 4:
-            self.bpm_img[:,0:4] = 1
-            self.bpm_img[:,47] = 1
-            self.bpm_img[:,744] = 1
-            self.bpm_img[:,790:792] = 1
-            self.bpm_img[:,997:999] = 1
+            self.bpm_img[:, 0:4] = 1
+            self.bpm_img[:, 47] = 1
+            self.bpm_img[:, 744] = 1
+            self.bpm_img[:, 790:792] = 1
+            self.bpm_img[:, 997:999] = 1
         elif det == 5:
-            self.bpm_img[:,25:27] = 1
-            self.bpm_img[:,128:130] = 1
-            self.bpm_img[:,1535:1539] = 1
+            self.bpm_img[:, 25:27] = 1
+            self.bpm_img[:, 128:130] = 1
+            self.bpm_img[:, 1535:1539] = 1
         elif det == 7:
-            self.bpm_img[:,426:428] = 1
-            self.bpm_img[:,676] = 1
-            self.bpm_img[:,1176:1178] = 1
+            self.bpm_img[:, 426:428] = 1
+            self.bpm_img[:, 676] = 1
+            self.bpm_img[:, 1176:1178] = 1
         elif det == 8:
-            self.bpm_img[:,440] = 1
-            self.bpm_img[:,509:513] = 1
-            self.bpm_img[:,806] = 1
-            self.bpm_img[:,931:934] = 1
+            self.bpm_img[:, 440] = 1
+            self.bpm_img[:, 509:513] = 1
+            self.bpm_img[:, 806] = 1
+            self.bpm_img[:, 931:934] = 1
 
         return self.bpm_img
 
@@ -552,13 +557,13 @@ class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
         """
         arcparam['wv_cen'] = fitstbl['dispangle'][arc_idx]
         # TODO -- Should set according to the lamps that were on
-        #arcparam['lamps'] = ['ArI','NeI','KrI','XeI']
+        # arcparam['lamps'] = ['ArI','NeI','KrI','XeI']
         # JFH Right now these are all hard wired to use det =1 numbers. Otherwise we will need a separate arcparam for each
         # detector and there is no mechanism in place to create that yet
 
-        arcparam['nonlinear_counts'] = self.detector[0]['nonlinear']*self.detector[0]['saturation']
-#        arcparam['min_nsig'] = 30.  # Minimum signififance
-        arcparam['sigdetect'] = 10.0      # Min significance for arc lines to be used
+        arcparam['nonlinear_counts'] = self.detector[0]['nonlinear'] * self.detector[0]['saturation']
+        #        arcparam['min_nsig'] = 30.  # Minimum signififance
+        arcparam['sigdetect'] = 10.0  # Min significance for arc lines to be used
         arcparam['wvmnx'] = [3000., 11000.]  # Guess at wavelength range
         # These parameters influence how the fts are done by pypeit.core.wavecal.fitting.iterative_fitting
         arcparam['match_toler'] = 3  # Matcing tolerance (pixels)
@@ -572,22 +577,23 @@ class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
         arcparam['wvmnx'][0] = 4000.
         arcparam['wvmnx'][1] = 11000.
 
-    #        if disperser == '830G': # Blaze 8640
-#            arcparam['n_first']=2 # Too much curvature for 1st order
-#            arcparam['disp']=0.47 # Ang per pixel (unbinned)
-#            arcparam['b1']= 1./arcparam['disp']/msarc_shape[0]
-#            arcparam['wvmnx'][0] = 550.
-#            arcparam['wvmnx'][1] = 11000.
-#            arcparam['min_ampl'] = 3000.  # Lines tend to be very strong
-#        elif disperser == '1200G': # Blaze 7760
-#            arcparam['n_first']=2 # Too much curvature for 1st order
-#            arcparam['disp']=0.32 # Ang per pixel (unbinned)
-#            arcparam['b1']= 1./arcparam['disp']/msarc_shape[0]
-#            arcparam['wvmnx'][0] = 550.
-#            arcparam['wvmnx'][1] = 11000.
-#            arcparam['min_ampl'] = 2000.  # Lines tend to be very strong
-#        else:
-#            msgs.error('Not ready for this disperser {:s}!'.format(disperser))
+        #        if disperser == '830G': # Blaze 8640
+
+    #            arcparam['n_first']=2 # Too much curvature for 1st order
+    #            arcparam['disp']=0.47 # Ang per pixel (unbinned)
+    #            arcparam['b1']= 1./arcparam['disp']/msarc_shape[0]
+    #            arcparam['wvmnx'][0] = 550.
+    #            arcparam['wvmnx'][1] = 11000.
+    #            arcparam['min_ampl'] = 3000.  # Lines tend to be very strong
+    #        elif disperser == '1200G': # Blaze 7760
+    #            arcparam['n_first']=2 # Too much curvature for 1st order
+    #            arcparam['disp']=0.32 # Ang per pixel (unbinned)
+    #            arcparam['b1']= 1./arcparam['disp']/msarc_shape[0]
+    #            arcparam['wvmnx'][0] = 550.
+    #            arcparam['wvmnx'][1] = 11000.
+    #            arcparam['min_ampl'] = 2000.  # Lines tend to be very strong
+    #        else:
+    #            msgs.error('Not ready for this disperser {:s}!'.format(disperser))
 
     def get_slitmask(self, filename):
         hdu = fits.open(filename)
@@ -598,7 +604,7 @@ class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
                             hdu['BluSlits'].data['slitX3'],
                             hdu['BluSlits'].data['slitY3'],
                             hdu['BluSlits'].data['slitX4'],
-                            hdu['BluSlits'].data['slitY4']]).T.reshape(-1,4,2)
+                            hdu['BluSlits'].data['slitY4']]).T.reshape(-1, 4, 2)
         self.slitmask = SlitMask(corners, slitid=hdu['BluSlits'].data['dSlitId'])
         return self.slitmask
 
@@ -617,13 +623,13 @@ class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
         if slider == 3:
             central_wave = hdu[0].header['G3TLTWAV']
             # Not used
-            #angle = (hdu[0].header['G3TLTRAW'] + 29094)/2500
+            # angle = (hdu[0].header['G3TLTRAW'] + 29094)/2500
             tilt = hdu[0].header['G3TLTVAL']
-        elif slider in [2,4]:
+        elif slider in [2, 4]:
             # Slider is 2 or 4
             central_wave = hdu[0].header['G4TLTWAV']
             # Not used
-            #angle = (hdu[0].header['G4TLTRAW'] + 40934)/2500
+            # angle = (hdu[0].header['G4TLTRAW'] + 40934)/2500
             tilt = hdu[0].header['G4TLTVAL']
         else:
             raise ValueError('Slider has unknown value: {0}'.format(slider))
@@ -637,9 +643,9 @@ class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
             # convert to a floating point number
             ruling = float(re.sub('[^0-9]', '', name))
             # Adjust
-            if abs(ruling-1200) < 0.5:
+            if abs(ruling - 1200) < 0.5:
                 ruling = 1200.06
-            elif abs(ruling-831) <  2:
+            elif abs(ruling - 831) < 2:
                 ruling = 831.90
 
         # Get the orientation of the grating
@@ -672,22 +678,22 @@ class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
 
         # Use the calibrated coefficients
         _ruling = int(ruling) if int(ruling) in [600, 831, 900, 1200] else 'other'
-        orientation_coeffs = {3: {    600: [ 0.145, -0.008, 5.6e-4, -0.182],
-                                      831: [ 0.143,  0.000, 5.6e-4, -0.182],
-                                      900: [ 0.141,  0.000, 5.6e-4, -0.134],
-                                     1200: [ 0.145,  0.055, 5.6e-4, -0.181],
-                                  'other': [ 0.145,  0.000, 5.6e-4, -0.182] },
-                              4: {    600: [-0.065,  0.063, 6.9e-4, -0.298],
-                                      831: [-0.034,  0.060, 6.9e-4, -0.196],
-                                      900: [-0.064,  0.083, 6.9e-4, -0.277],
-                                     1200: [-0.052,  0.122, 6.9e-4, -0.294],
-                                  'other': [-0.050,  0.080, 6.9e-4, -0.250] } }
+        orientation_coeffs = {3: {600: [0.145, -0.008, 5.6e-4, -0.182],
+                                  831: [0.143, 0.000, 5.6e-4, -0.182],
+                                  900: [0.141, 0.000, 5.6e-4, -0.134],
+                                  1200: [0.145, 0.055, 5.6e-4, -0.181],
+                                  'other': [0.145, 0.000, 5.6e-4, -0.182]},
+                              4: {600: [-0.065, 0.063, 6.9e-4, -0.298],
+                                  831: [-0.034, 0.060, 6.9e-4, -0.196],
+                                  900: [-0.064, 0.083, 6.9e-4, -0.277],
+                                  1200: [-0.052, 0.122, 6.9e-4, -0.294],
+                                  'other': [-0.050, 0.080, 6.9e-4, -0.250]}}
 
         # Return calbirated roll, yaw, and tilt
         return orientation_coeffs[slider][_ruling][0], \
-                orientation_coeffs[slider][_ruling][1], \
-                tilt*(1-orientation_coeffs[slider][_ruling][2]) \
-                    + orientation_coeffs[slider][_ruling][3]
+               orientation_coeffs[slider][_ruling][1], \
+               tilt * (1 - orientation_coeffs[slider][_ruling][2]) \
+               + orientation_coeffs[slider][_ruling][3]
 
     def mask_to_pixel_coordinates(self, x=None, y=None, wave=None, order=1, filename=None,
                                   corners=False):
@@ -773,8 +779,8 @@ class KeckDEIMOSSpectrograph(spectrograph.Spectrograph):
         _y = None if y is None else np.atleast_1d(y)
         if _x is None:
             # Use all the slit centers or corners
-            _x = self.slitmask.corners[...,0].ravel() if corners else self.slitmask.center[:,0]
-            _y = self.slitmask.corners[...,1].ravel() if corners else self.slitmask.center[:,1]
+            _x = self.slitmask.corners[..., 0].ravel() if corners else self.slitmask.center[:, 0]
+            _y = self.slitmask.corners[..., 1].ravel() if corners else self.slitmask.center[:, 1]
 
         # Check that the grating is defined
         if self.grating is None:
@@ -807,33 +813,33 @@ class DEIMOSOpticalModel(OpticalModel):
     # a single number.
     def __init__(self, grating):
         super(DEIMOSOpticalModel, self).__init__(
-                    20018.4,                # Pupil distance in mm (!PPLDIST, !D_1)
-                    2133.6,                 # Radius of the image surface in mm (!R_IMSURF)
-                    2124.71,                # Focal-plane radius of curvature in mm (!R_CURV)
-                    2120.9,                 # Mask radius of curvature in mm (!M_RCURV)
-                    np.radians(6.),         # Mask tilt angle in radians (!M_ANGLE)
-                    128.803,                # Mask y zero point in mm (!ZPT_YM)
-                    3.378,                  # Mask z zero-point in mm (!MASK_HT0)
-                    2197.1,                 # Collimator distance in mm (sys.COL_DST)
-                    4394.2,                 # Collimator radius of curvature in mm (!R_COLL)
-                    -0.75,                  # Collimator curvature constant (!K_COLL)
-                    np.radians(0.002),      # Collimator tilt error in radians (sys.COL_ERR)
-                    0.0,                    # Collimator tilt phi angle in radians (sys.COL_PHI)
-                    grating,                # DEIMOS grating object
-                    np.radians(2.752),      # Camera angle in radians (sys.CAM_ANG)
-                    np.pi/2,                # Camera tilt phi angle in radians (sys.CAM_PHI)
-                    382.0,                  # Camera focal length in mm (sys.CAM_FOC)
-                    DEIMOSCameraDistortion(),   # Object used to apply/remove camera distortions
-                    np.radians(0.021),      # ICS rotation in radians (sys.MOS_ROT)
-                    [-0.234, -3.822])       # Camera optical axis center in mm (sys.X_OPT,sys.Y_OPT)
+            20018.4,  # Pupil distance in mm (!PPLDIST, !D_1)
+            2133.6,  # Radius of the image surface in mm (!R_IMSURF)
+            2124.71,  # Focal-plane radius of curvature in mm (!R_CURV)
+            2120.9,  # Mask radius of curvature in mm (!M_RCURV)
+            np.radians(6.),  # Mask tilt angle in radians (!M_ANGLE)
+            128.803,  # Mask y zero point in mm (!ZPT_YM)
+            3.378,  # Mask z zero-point in mm (!MASK_HT0)
+            2197.1,  # Collimator distance in mm (sys.COL_DST)
+            4394.2,  # Collimator radius of curvature in mm (!R_COLL)
+            -0.75,  # Collimator curvature constant (!K_COLL)
+            np.radians(0.002),  # Collimator tilt error in radians (sys.COL_ERR)
+            0.0,  # Collimator tilt phi angle in radians (sys.COL_PHI)
+            grating,  # DEIMOS grating object
+            np.radians(2.752),  # Camera angle in radians (sys.CAM_ANG)
+            np.pi / 2,  # Camera tilt phi angle in radians (sys.CAM_PHI)
+            382.0,  # Camera focal length in mm (sys.CAM_FOC)
+            DEIMOSCameraDistortion(),  # Object used to apply/remove camera distortions
+            np.radians(0.021),  # ICS rotation in radians (sys.MOS_ROT)
+            [-0.234, -3.822])  # Camera optical axis center in mm (sys.X_OPT,sys.Y_OPT)
 
         # Include tent mirror
-        self.tent_theta = np.radians(71.5-0.5)  # Tent mirror theta angle (sys.TNT_ANG)
-        self.tent_phi = np.radians(90.+0.081)   # Tent mirror phi angle (sys.TNT_PHI)
+        self.tent_theta = np.radians(71.5 - 0.5)  # Tent mirror theta angle (sys.TNT_ANG)
+        self.tent_phi = np.radians(90. + 0.081)  # Tent mirror phi angle (sys.TNT_PHI)
 
-        #TENT MIRROR: this mirror is OK to leave in del-theta,phi
+        # TENT MIRROR: this mirror is OK to leave in del-theta,phi
         self.tent_reflection \
-                = OpticalModel.get_reflection_transform(self.tent_theta, self.tent_phi)
+            = OpticalModel.get_reflection_transform(self.tent_theta, self.tent_phi)
 
     def reset_grating(self, grating):
         self.grating = grating
@@ -853,12 +859,13 @@ class DEIMOSOpticalModel(OpticalModel):
 
 class DEIMOSCameraDistortion:
     """Class to remove or apply DEIMOS camera distortion."""
+
     def __init__(self):
         self.c0 = 1.
         self.c2 = 0.0457563
         self.c4 = -0.3088123
         self.c6 = -14.917
-    
+
         x = np.linspace(-0.6, 0.6, 1000)
         y = self.remove_distortion(x)
         self.interpolator = interpolate.interp1d(y, x)
@@ -882,6 +889,7 @@ class DEIMOSDetectorMap(DetectorMap):
 
     !! PIXEL COORDINATES ARE 1-INDEXED !!
     """
+
     def __init__(self):
         # Number of chips
         self.nccd = 8
@@ -899,23 +907,23 @@ class DEIMOSDetectorMap(DetectorMap):
         self.ccd_edge = np.array([0.154, 0.070])
 
         # Effective size of each chip in each dimension in pixels
-        self.ccd_size = self.npix + (2*self.ccd_edge + self.ccd_gap)/self.pixel_size
+        self.ccd_size = self.npix + (2 * self.ccd_edge + self.ccd_gap) / self.pixel_size
 
         # Center coordinates
-        origin = np.array([[-1.5,-0.5], [-0.5,-0.5], [ 0.5,-0.5], [ 1.5,-0.5],
-                           [-1.5, 0.5], [-0.5, 0.5], [ 0.5, 0.5], [ 1.5, 0.5]])
+        origin = np.array([[-1.5, -0.5], [-0.5, -0.5], [0.5, -0.5], [1.5, -0.5],
+                           [-1.5, 0.5], [-0.5, 0.5], [0.5, 0.5], [1.5, 0.5]])
         offset = np.array([[-20.05, 14.12], [-12.64, 7.25], [0.00, 0.00], [-1.34, -19.92],
-                           [-19.02, 16.46], [ -9.65, 8.95], [1.88, 1.02], [ 4.81, -24.01]])
-        self.ccd_center = origin * self.ccd_size[None,:] + offset
-        
+                           [-19.02, 16.46], [-9.65, 8.95], [1.88, 1.02], [4.81, -24.01]])
+        self.ccd_center = origin * self.ccd_size[None, :] + offset
+
         # Construct the rotation matrix
         self.rotation = np.radians([-0.082, 0.030, 0.0, -0.1206, 0.136, -0.06, -0.019, -0.082])
         cosa = np.cos(self.rotation)
         sina = np.sin(self.rotation)
-        self.rot_matrix = np.array([cosa, -sina, sina, cosa]).T.reshape(self.nccd,2,2)
+        self.rot_matrix = np.array([cosa, -sina, sina, cosa]).T.reshape(self.nccd, 2, 2)
 
         # ccd_geom.pro has offsets by sys.CN_XERR, but these are all 0.
-   
+
 
 def read_deimos(raw_file, det=None):
     """
@@ -961,7 +969,7 @@ def read_deimos(raw_file, det=None):
 
     # Create final image
     if det is None:
-        image = np.zeros((x_npix,y_npix+4*postpix))
+        image = np.zeros((x_npix, y_npix + 4 * postpix))
 
     # Setup for datasec, oscansec
     dsec = []
@@ -977,22 +985,20 @@ def read_deimos(raw_file, det=None):
     # DEIMOS detectors
     nchip = 8
 
-
     if det is None:
         chips = range(nchip)
     else:
-        chips = [det-1] # Indexing starts at 0 here
+        chips = [det - 1]  # Indexing starts at 0 here
     # Loop
     for tt in chips:
-        data, oscan = deimos_read_1chip(hdu, tt+1)
+        data, oscan = deimos_read_1chip(hdu, tt + 1)
 
-
-        #if n_elements(nobias) eq 0 then nobias = 0
+        # if n_elements(nobias) eq 0 then nobias = 0
 
 
         # One detector??
         if det is not None:
-            image = np.zeros((data.shape[0],data.shape[1]+oscan.shape[1]))
+            image = np.zeros((data.shape[0], data.shape[1] + oscan.shape[1]))
 
         # Indexing
         x1, x2, y1, y2, o_x1, o_x2, o_y1, o_y2 = indexing(tt, postpix, det=det)
@@ -1007,7 +1013,7 @@ def read_deimos(raw_file, det=None):
         dsec.append(idsec)
         osec.append(iosec)
     # Return
-    return image, head0, (dsec,osec)
+    return image, head0, (dsec, osec)
 
 
 def indexing(itt, postpix, det=None):
@@ -1035,21 +1041,22 @@ def indexing(itt, postpix, det=None):
     if tt < 4:
         y1, y2 = 0, jj
     else:
-        y1, y2 = jj, 2*jj
+        y1, y2 = jj, 2 * jj
     o_y1, o_y2 = y1, y2
 
     # x
-    x1, x2 = (tt%4)*ii, (tt%4 + 1)*ii
+    x1, x2 = (tt % 4) * ii, (tt % 4 + 1) * ii
     if det is None:
-        o_x1 = 4*ii + (tt%4)*postpix
+        o_x1 = 4 * ii + (tt % 4) * postpix
     else:
-        o_x1 = ii + (tt%4)*postpix
+        o_x1 = ii + (tt % 4) * postpix
     o_x2 = o_x1 + postpix
 
     # Return
     return x1, x2, y1, y2, o_x1, o_x2, o_y1, o_y2
 
-def deimos_read_1chip(hdu,chipno):
+
+def deimos_read_1chip(hdu, chipno):
     """ Read one of the DEIMOS detectors
 
     Parameters
@@ -1073,17 +1080,17 @@ def deimos_read_1chip(hdu,chipno):
     x1_det, x2_det, y1_det, y2_det = np.array(parse.load_sections(detsec)).flatten()
 
     # This rotates the image to be increasing wavelength to the top
-    #data = np.rot90((hdu[chipno].data).T, k=2)
-    #nx=data.shape[0]
-    #ny=data.shape[1]
+    # data = np.rot90((hdu[chipno].data).T, k=2)
+    # nx=data.shape[0]
+    # ny=data.shape[1]
 
 
     # Science data
     fullimage = hdu[chipno].data
-    data = fullimage[x1_dat:x2_dat,y1_dat:y2_dat]
+    data = fullimage[x1_dat:x2_dat, y1_dat:y2_dat]
 
     # Overscan
-    oscan = fullimage[:,y2_dat:]
+    oscan = fullimage[:, y2_dat:]
 
     # Flip as needed
     if x1_det > x2_det:
