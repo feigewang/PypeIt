@@ -1,4 +1,4 @@
-""" Module for Keck/NIRES specific codes
+""" Module for Magellan/FIRE specific codes
 """
 from __future__ import absolute_import, division, print_function
 
@@ -10,24 +10,27 @@ from pypeit.core import framematch
 from pypeit.par import pypeitpar
 from pypeit.spectrographs import spectrograph
 from pypeit.core import pixels
-
-
 from pypeit import debugger
 
-class KeckNIRESSpectrograph(spectrograph.Spectrograph):
+class MagellanFIRESpectrograph(spectrograph.Spectrograph):
     """
-    Child to handle Keck/NIRES specific code
+    Child to handle Magellan/FIRE specific code
+    Important Notes:
+        For FIRE Echelle, we usually use high gain and SUTR read mode. The exposure time is usually
+        around 900s. The detector parameters below are based on such mode. Standard star and calibrations
+        are usually use Fowler 1 read mode in which case the read noise is ~20 electron.
     """
     def __init__(self):
         # Get it started
-        super(KeckNIRESSpectrograph, self).__init__()
-        self.spectrograph = 'keck_nires'
-        self.telescope = telescopes.KeckTelescopePar()
-        self.camera = 'NIRES'
-        self.numhead = 3
+        super(MagellanFIRESpectrograph, self).__init__()
+        self.spectrograph = 'magellan_fire'
+        self.telescope = telescopes.MagellanTelescopePar()
+        self.camera = 'FIRE'
+        self.numhead = 1
         self.detector = [
                 # Detector 1
                 pypeitpar.DetectorPar(
+                            dataext         = 0,
                             dispaxis        = 1,
                             dispflip        = True,
                             xgap            = 0.,
@@ -35,15 +38,15 @@ class KeckNIRESSpectrograph(spectrograph.Spectrograph):
                             ysize           = 1.,
                             platescale      = 0.15,
                             darkcurr        = 0.01,
-                            saturation      = 65535.,
-                            nonlinear       = 0.76,
+                            saturation      = 20000., # high gain mode, low gain is 32000
+                            nonlinear       = 1.0, # high gain mode, low gain is 0.875
                             numamplifiers   = 1,
-                            gain            = 3.8,
-                            ronoise         = 5.0,
-                            datasec         = '[1:2048,1:1024]',
-                            oscansec        = '[1:2048,980:1024]'
+                            gain            = 1.2, # high gain mode, low gain is 3.8 e-/DN
+                            ronoise         = 5.0, # for high gain mode and SUTR read modes with exptime ~ 900s
+                            datasec         = '[1:2048,1:2048]',
+                            oscansec        = '[:,:4]'
                             )]
-        self.norders = 5
+        self.norders = 22
         # Uses default timeunit
         # Uses default primary_hdrext
         # self.sky_file = ?
@@ -57,7 +60,7 @@ class KeckNIRESSpectrograph(spectrograph.Spectrograph):
         Set default parameters for Shane Kast Blue reductions.
         """
         par = pypeitpar.PypeItPar()
-        par['rdx']['spectrograph'] = 'keck_nires'
+        par['rdx']['spectrograph'] = 'magellan_fire'
         # Frame numbers
         par['calibrations']['standardframe']['number'] = 1
         par['calibrations']['biasframe']['number'] = 0
@@ -70,18 +73,17 @@ class KeckNIRESSpectrograph(spectrograph.Spectrograph):
         # 1D wavelength solution
         par['calibrations']['wavelengths']['rms_threshold'] = 0.20  # Might be grating dependent..
         par['calibrations']['wavelengths']['sigdetect']=5.0
-        par['calibrations']['wavelengths']['lamps'] = ['OH_NIRES']
+        par['calibrations']['wavelengths']['lamps'] = ['OH_XSHOOTER']
         par['calibrations']['wavelengths']['nonlinear_counts'] = self.detector[0]['nonlinear'] * self.detector[0]['saturation']
 
-        par['calibrations']['wavelengths']['method'] = 'reidentify'
-
         # Reidentification parameters
-        par['calibrations']['wavelengths']['reid_arxiv'] = 'keck_nires.json'
+        #par['calibrations']['wavelengths']['method'] = 'reidentify'
+        #par['calibrations']['wavelengths']['reid_arxiv'] = 'magellan_fire.json'
         par['calibrations']['wavelengths']['ech_fix_format'] = True
         # Echelle parameters
         par['calibrations']['wavelengths']['echelle'] = True
         par['calibrations']['wavelengths']['ech_nspec_coeff'] = 4
-        par['calibrations']['wavelengths']['ech_norder_coeff'] = 5
+        par['calibrations']['wavelengths']['ech_norder_coeff'] = 4
         par['calibrations']['wavelengths']['ech_sigrej'] = 3.0
 
         # Always correct for flexure, starting with default parameters
@@ -89,13 +91,13 @@ class KeckNIRESSpectrograph(spectrograph.Spectrograph):
         par['scienceframe']['process']['sigclip'] = 20.0
         par['scienceframe']['process']['satpix'] ='nothing'
 
-
         # Set slits and tilts parameters
         par['calibrations']['tilts']['order'] = 2
-        par['calibrations']['tilts']['tracethresh'] = [10, 10, 10, 10, 10]
+        par['calibrations']['tilts']['tracethresh'] = [10, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 10]
         par['calibrations']['slits']['polyorder'] = 5
-        par['calibrations']['slits']['maxshift'] = 3.
-        par['calibrations']['slits']['pcatype'] = 'order'
+        par['calibrations']['slits']['sigdetect'] = 50
+        par['calibrations']['slits']['maxshift'] = 0.5
+        par['calibrations']['slits']['pcatype'] = 'pixel'
         # Scienceimage default parameters
         par['scienceimage'] = pypeitpar.ScienceImagePar()
         # Always flux calibrate, starting with default parameters
@@ -104,7 +106,7 @@ class KeckNIRESSpectrograph(spectrograph.Spectrograph):
         par['flexure'] = pypeitpar.FlexurePar()
         par['flexure']['method'] = 'skip'
         # Set the default exposure time ranges for the frame typing
-        par['calibrations']['standardframe']['exprng'] = [None, 20]
+        par['calibrations']['standardframe']['exprng'] = [None, 60]
         par['calibrations']['arcframe']['exprng'] = [20, None]
         par['calibrations']['darkframe']['exprng'] = [20, None]
         par['scienceframe']['exprng'] = [20, None]
@@ -121,11 +123,11 @@ class KeckNIRESSpectrograph(spectrograph.Spectrograph):
             headers (list):
                 A list of headers read from a fits file
         """
-        expected_values = { '0.INSTRUME': 'NIRES',
-                               '1.NAXIS': 2,
-                              '1.NAXIS1': 2048,
-                              '1.NAXIS2': 1024 }
-        super(KeckNIRESSpectrograph, self).check_headers(headers, expected_values=expected_values)
+        expected_values = { '0.INSTRUME': 'FIRE',
+                               '0.NAXIS': 2,
+                              '0.NAXIS1': 2048,
+                              '0.NAXIS2': 2048 }
+        super(MagellanFIRESpectrograph, self).check_headers(headers, expected_values=expected_values)
 
     def header_keys(self):
         """
@@ -143,13 +145,13 @@ class KeckNIRESSpectrograph(spectrograph.Spectrograph):
 
         # Copied over defaults
         hdr_keys[0]['idname'] = 'OBSTYPE'
-        hdr_keys[0]['time'] = 'MJD-OBS'
-        #hdr_keys[0]['date'] = 'DATE-OBS'
-        hdr_keys[0]['utc'] = 'UTC'
+        #hdr_keys[0]['time'] = 'MJD-OBS'
+        hdr_keys[0]['date'] = 'DATE-OBS'
+        hdr_keys[0]['utc'] = 'UT-TIME'
         hdr_keys[0]['ra'] = 'RA'
         hdr_keys[0]['dec'] = 'DEC'
         hdr_keys[0]['airmass'] = 'AIRMASS'
-        hdr_keys[0]['exptime'] = 'ITIME'
+        hdr_keys[0]['exptime'] = 'EXPTIME'
         hdr_keys[0]['target'] = 'OBJECT'
         hdr_keys[0]['naxis0'] = 'NAXIS2'
         hdr_keys[0]['naxis1'] = 'NAXIS1'
@@ -159,26 +161,29 @@ class KeckNIRESSpectrograph(spectrograph.Spectrograph):
         return hdr_keys
 
     def metadata_keys(self):
-        return ['filename', 'date', 'frametype', 'target', 'exptime']
+        return ['filename', 'date', 'frametype', 'idname','target', 'exptime']
 
     def check_frame_type(self, ftype, fitstbl, exprng=None):
         """
         Check for frames of the provided type.
         """
+        good_exp = framematch.check_frame_exptime(fitstbl['exptime'], exprng)
         if ftype in ['pinhole', 'bias']:
             # No pinhole or bias frames
             return np.zeros(len(fitstbl), dtype=bool)
         if ftype in ['pixelflat', 'trace']:
-            return fitstbl['idname'] == 'domeflat'
-        
-        return (fitstbl['idname'] == 'object') \
-                        & framematch.check_frame_exptime(fitstbl['exptime'], exprng)
-
-
-
+            return good_exp & (fitstbl['idname'] == 'PixFlat')
+        if ftype == 'standard':
+            return good_exp & (fitstbl['idname'] == 'Telluric')
+        if ftype == 'science':
+            return good_exp & (fitstbl['idname'] == 'Science')
+        if ftype == 'arc':
+            return good_exp & (fitstbl['idname'] == 'Science')
+        msgs.warn('Cannot determine if frames are of type {0}.'.format(ftype))
+        return np.zeros(len(fitstbl), dtype=bool)
 
     def get_match_criteria(self):
-        """Set the general matching criteria for NIRES"""
+        """Set the general matching criteria for FIRE"""
         match_criteria = {}
         for key in framematch.FrameTypeBitMask().keys():
             match_criteria[key] = {}
@@ -203,13 +208,6 @@ class KeckNIRESSpectrograph(spectrograph.Spectrograph):
         match_criteria['arc']['match']['naxis0'] = '=0'
         match_criteria['arc']['match']['naxis1'] = '=0'
 
-        # OLD
-        # Bias
-        #match_criteria['bias']['match'] = {}
-        #match_criteria['standard']['match'] = {}
-        #match_criteria['pixelflat']['match'] = {}
-        #match_criteria['trace']['match'] = {}
-        #match_criteria['arc']['match'] = {}
         return match_criteria
 
     def bpm(self, shape=None, filename=None, det=None, **null_kwargs):
@@ -231,11 +229,10 @@ class KeckNIRESSpectrograph(spectrograph.Spectrograph):
           0 = ok; 1 = Mask
 
         """
-        msgs.info("Custom bad pixel mask for NIRES")
+        msgs.info("Custom bad pixel mask for FIRE")
         self.empty_bpm(shape=shape, filename=filename, det=det)
         if det == 1:
-            self.bpm_img[:, :20] = 1.
-            self.bpm_img[:, 1000:] = 1.
+            self.bpm_img[:, :4] = 1.
 
         return self.bpm_img
 
@@ -299,7 +296,7 @@ class KeckNIRESSpectrograph(spectrograph.Spectrograph):
         else:
             msgs.error('Unrecognized type for islit')
 
-        orders = np.arange(7, 2, -1, dtype=int)
+        orders = np.arange(32, 11, -1, dtype=int)
         return orders[islit]
 
     @staticmethod
@@ -323,16 +320,6 @@ class KeckNIRESSpectrograph(spectrograph.Spectrograph):
 
         """
 
-        # NIRES has no binning, but for an instrument with binning we would do this
+        # FIRE has no binning, but for an instrument with binning we would do this
         #binspatial, binspectral = parse.parse_binning(binning)
         return np.full(5, 0.15)
-
-
-
-
-
-
-
-
-
-
