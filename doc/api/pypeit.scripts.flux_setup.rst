@@ -1,7 +1,7 @@
-pypeit.images.scienceimage module
+pypeit.scripts.flux\_setup module
 =================================
 
-.. automodule:: pypeit.images.scienceimage
+.. automodule:: pypeit.scripts.flux_setup
    :members:
    :private-members:
    :undoc-members:
