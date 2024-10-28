@@ -9,8 +9,10 @@ PypeIt QA
 =========
 
 As part of the standard reduction, PypeIt generates a series
-of Quality Assurance (QA) files. This document describes
+of fixed-format Quality Assurance (QA) figures. This document describes
 the typical outputs, in the typical order that they appear.
+
+*This page is still a work in progress.*
 
 The basic arrangement is that individual PNG files are created
 and then a set of HTML files are generated to organize
@@ -20,8 +22,8 @@ viewing of the PNGs.
 HTML
 ====
 
-When the code completes (or crashes out), a set of
-HTML files are generated in the ``QA/`` folder.  There
+When the code completes (or crashes out), an HTML
+file is generated in the ``QA/`` folder.  There
 is one HTML file per calibration frame set and one
 HTML file per science exposure.  Example names are
 ``MF_A.html``.
@@ -42,6 +44,10 @@ one generated for each setup and detector and
 Generally, the title describes the type of QA and the
 sub-title indicates the user who ran PypeIt and the
 date of the processing.
+
+.. _qa-order-predict:
+
+
 
 .. _qa-wave-fit:
 
