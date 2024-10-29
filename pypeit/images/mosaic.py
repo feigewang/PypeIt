@@ -173,11 +173,6 @@ class Mosaic(datamodel.DataContainer):
             type_passed &= tp
         d['detectors'] = np.array(d['detectors'], dtype=object)
 
-#        d['detectors'] = np.array([DetectorContainer.from_hdu(
-#                                        fits.BinTableHDU(data=table.Table(tbl[i]),
-#                                                         name='DETECTOR', header=hdr))
-#                                    for i in range(ndet)])
-
         return d, version_passed, type_passed, parsed_hdus
 
 

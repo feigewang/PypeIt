@@ -34,3 +34,7 @@ def test_io():
 
     # Should not fail because skipping the version check    
     _mpar = Mosaic.from_file(ofile, chk_version=False)
+
+    # Remove file
+    ofile = Path(ofile)
+    ofile.unlink()
