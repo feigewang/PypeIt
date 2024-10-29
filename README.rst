@@ -46,7 +46,7 @@ PypeIt |forks| |stars|
 
 |github| |pypi| |pypi_downloads| |License|
 
-|docs| |CITests| |Coverage| 
+|docs| |CITests|
 
 |DOI_latest| |JOSS| |arxiv|
 
