@@ -42,6 +42,7 @@ Functionality/Performance Improvements and Additions
 - Added a functionality that allows, when multiple frames are combined, to scale each
   frame to have the same mean value before combining. To use this
   functionality, the new parameter ``scale_mean`` should be set to ``True``.
+- Added the possibility to use the parameter ``fwhm_fromlines`` also for the tilts calibration.
 
 Instrument-specific Updates
 ---------------------------
