@@ -24,17 +24,18 @@ def test_io():
     _mpar = Mosaic.from_file(ofile)
 
     # Change the version
+    _ofile = data_output_path('tmp_mosaic_wrongver.fits')
     with fits.open(ofile) as hdu:
         hdu['MOSAIC'].header['DMODVER'] = '1.0.0'
-        hdu.writeto(ofile, overwrite=True)
+        hdu.writeto(_ofile, overwrite=True)
 
     # Reading should fail because version is checked by default
     with pytest.raises(PypeItDataModelError):
-        _mpar = Mosaic.from_file(ofile)
+        _mpar = Mosaic.from_file(_ofile)
 
     # Should not fail because skipping the version check    
-    _mpar = Mosaic.from_file(ofile, chk_version=False)
+    _mpar = Mosaic.from_file(_ofile, chk_version=False)
 
-    # Remove file
-    ofile = Path(ofile)
-    ofile.unlink()
+    # Remove files
+    Path(ofile).unlink()
+    Path(_ofile).unlink()
