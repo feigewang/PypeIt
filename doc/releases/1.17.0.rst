@@ -54,10 +54,9 @@ Instrument-specific Updates
   sky flats.
 - Improved HIRES frame typing and configuration setup.
 - Added support for Keck/KCWI BH3 grating configuration.
-- Updated the requirements of a spectral flip for KCWI (blue) data. If
-  all amplifiers are used, the data will be flipped. If all amplifiers
-  are used, the data will not be flipped.  Otherwise, the data will be
-  flipped.
+- Updated the requirements of a spectral flip for KCWI (blue) data.  If
+  all amplifiers are used, the data will not be flipped in the spectral
+  direction. Otherwise, the data will be flipped.
 - Added support for the (decommissioned) AAT/UHRF instrument
 - Updated X-Shooter detector gain and read noise to come from header,
   and updated plate scales to the most recent values from the manual.
