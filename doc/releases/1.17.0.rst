@@ -79,6 +79,7 @@ Instrument-specific Updates
           0.164 arcsec/pixel for all orders
 
 - Add new P200/DBSP reid_arxiv template for 1200/7100 with D55 dichroic
+- Add B480 as a supported option for Gemini-S/GMOS
 
 Script Changes
 --------------
