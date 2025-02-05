@@ -1,5 +1,5 @@
 
-Version 1.17.1dev
+Version 1.17.2dev
 =================
 
 Installation Changes
@@ -24,6 +24,9 @@ Functionality/Performance Improvements and Additions
   respectively.
 - Setup GUI allows resizing panels when viewing pypeit files.
 - Setup GUI allows selecting which detector to view when viewing raw data.
+- Added backwards compatibilty for old frames taken with the Bok B&C
+- The object trace can now be iterated over with the `find_numiterfit`
+  parameter.
 
 Instrument-specific Updates
 ---------------------------
@@ -33,6 +36,11 @@ Script Changes
 --------------
 
 - `pypeit_setup_gui` script has been removed. The Setup GUI can be started with `pypeit_setup -G`.
+
+- Added ``pypeit_run_to_calibstep`` to run PypeIt to an input calibration
+  step. This script is useful to re-generate calibration files for a given
+  configuration without running the full reduction.
+
 
 Datamodel Changes
 -----------------
@@ -52,4 +60,8 @@ Bug Fixes
   the spectrum is extracted even when `pixelflat_model` does not exist.
 - The variance cube previously had a cubic term, and this has been changed
   to a quadratic term. This has been cross-checked with simple subpixel calculations.
+- Fixes bug associated with trying to remove or add slits for reductions that
+  mosaic multiple detectors.
 - Fix Setup GUI sizing issues on MacOS.
+- Fixed a bug with ``pypeit_identify`` when the number of echelle orders has
+  more than two digits.
