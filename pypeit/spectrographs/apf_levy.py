@@ -78,10 +78,15 @@ class APFLevySpectrograph(spectrograph.Spectrograph):
 
         # no sky subtraction on standard stars
         par['reduce']['skysub']['global_sky_std'] = False
+        par['reduce']['skysub']['no_local_sky'] = True
+
         # skip sky subtraction when searching for objects
         # this is because the sky subtraction is not very good with narrow
         # slits and the usual APF target is bright
         par['reduce']['findobj']['skip_skysub'] = True
+        par['reduce']['findobj']['maxnumber_sci'] = 1
+        par['reduce']['findobj']['maxnumber_std'] = 1
+#        par['reduce']['findobj']['find_trim_edge'] = 3,3
         return par
 
 
