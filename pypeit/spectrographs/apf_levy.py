@@ -87,6 +87,7 @@ class APFLevySpectrograph(spectrograph.Spectrograph):
 
         par['reduce']['findobj']['find_trim_edges'] = 3, 3,
         par['reduce']['findobj']['maxnumber_sci'] = 1
+        par['reduce']['findobj']['maxnumber_std'] = 1
 
         return par
 
