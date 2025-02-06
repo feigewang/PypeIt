@@ -50,6 +50,9 @@ Datamodel Changes
 Under-the-hood Improvements
 ---------------------------
 
+ - Updates the ``pypeit_trace_edges`` script to use ``lampoffflats``, if they're
+   provided by the pypeit file passed to the script.
+
 
 Bug Fixes
 ---------
@@ -65,3 +68,6 @@ Bug Fixes
 - Fix Setup GUI sizing issues on MacOS.
 - Fixed a bug with ``pypeit_identify`` when the number of echelle orders has
   more than two digits.
+- Fixed bug when defining manual extraction apertures for 2D coadds of echelle
+  data
+
