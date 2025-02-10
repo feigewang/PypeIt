@@ -27,6 +27,8 @@ Functionality/Performance Improvements and Additions
 - Added backwards compatibilty for old frames taken with the Bok B&C
 - The object trace can now be iterated over with the `find_numiterfit`
   parameter.
+- Added `EdgeTracePar` parameter `mask_off_detector` to allow the user to mask spectral
+  regions in each slit/order where more than 50% of the slit falls off the detector
 
 Instrument-specific Updates
 ---------------------------
