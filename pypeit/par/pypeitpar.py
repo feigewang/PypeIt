@@ -3364,8 +3364,8 @@ class EdgeTracePar(ParSet):
 
         defaults['mask_off_detector'] = False
         dtypes['mask_off_detector'] = bool
-        descr['mask_off_detector'] = 'Mask spectral regions in each slit/order where more ' \ 
-                                     'than 50% of the slit spatial coverage falls off the detector'
+        descr['mask_off_detector'] =  'Mask spectral regions in each slit/order where more than ' \
+                                        '50% of the slit spatial coverage falls off the detector. ' \
         
         defaults['max_shift_abs'] = 0.5
         dtypes['max_shift_abs'] = [int, float]
