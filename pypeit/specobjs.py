@@ -602,7 +602,7 @@ class SpecObjs:
                 chk &= (sub_box or sub_opt)
         return chk
 
-    def apply_flux_calib(self, par, spectrograph, sens):
+    def apply_flux_calib(self, par, spectrograph, sens, tell=False):
         """
         Flux calibrate the  object spectra (``sobjs``) using the provided
         sensitivity function (``sens``).
@@ -614,44 +614,44 @@ class SpecObjs:
                 PypeIt Spectrograph class
             sens (:class:`~pypeit.sensfunc.SensFunc`):
                 PypeIt Sensitivity function class
+            tell (:obj:`bool`, optional):
+                If True, apply telluric correction as well. The telluric model
+                comes from the sensitivity function. This is generally only
+                used for std fluxed QA plots.
         """
 
         _extinct_correct = (True if sens.algorithm == 'UVIS' else False) \
             if par['extinct_correct'] is None else par['extinct_correct']
-
-        if par['add_blaze']:
-            _, _, _, _, blaze_function, _, _ = self.unpack_object(log10blaze=True, extract_blaze=True, extract_type='BOX')
-            blaze_function = blaze_function.T
-        else:
-            blaze_function = None
 
         # TODO enbaling this for now in case someone wants to treat the IFU as a slit spectrograph
         #  (not recommnneded but useful for quick reductions where you don't want to construct cubes and don't care about DAR).
         if spectrograph.pypeline in ['MultiSlit','SlicerIFU']:
             for ii, sci_obj in enumerate(self.specobjs):
                 if sens.wave.shape[1] == 1:
+                    tellmodel = sens.telluric.model['TELLURIC'][0, :] if tell else None
                     sci_obj.apply_flux_calib(sens.wave[:, 0], sens.zeropoint[:, 0],
                                              self.header['EXPTIME'],
                                              extinct_correct=_extinct_correct,
+                                             tellmodel=tellmodel,
                                              longitude=spectrograph.telescope['longitude'],
                                              latitude=spectrograph.telescope['latitude'],
                                              extinctfilepar=par['extinct_file'],
                                              extrap_sens=par['extrap_sens'],
-                                             airmass=float(self.header['AIRMASS']),
-                                             blaze=blaze_function[ii] if blaze_function is not None else None)
+                                             airmass=float(self.header['AIRMASS']))
                 elif sens.wave.shape[1] > 1 and sens.splice_multi_det:
                     # This deals with the multi detector case where the sensitivity function is spliced. Note that
                     # the final sensitivity function written to disk is  the spliced one. This functionality is only
                     # used internal to sensfunc.py for fluxing the standard for the QA plot.
+                    tellmodel = sens.telluric.model['TELLURIC'][ii, :] if tell else None
                     sci_obj.apply_flux_calib(sens.wave[:, ii], sens.zeropoint[:, ii],
                                              self.header['EXPTIME'],
                                              extinct_correct=_extinct_correct,
+                                             tellmodel=tellmodel,
                                              longitude=spectrograph.telescope['longitude'],
                                              latitude=spectrograph.telescope['latitude'],
                                              extinctfilepar=par['extinct_file'],
                                              extrap_sens=par['extrap_sens'],
-                                             airmass=float(self.header['AIRMASS']),
-                                             blaze=blaze_function[ii] if blaze_function is not None else None)
+                                             airmass=float(self.header['AIRMASS']))
                 else:
                     msgs.error('This should not happen, there is a problem with your sensitivity function.')
 
@@ -662,20 +662,20 @@ class SpecObjs:
             # where not all orders are present in the data as in the sensfunc, etc.,
             # i.e. X-shooter with the K-band blocking filter.
             ech_orders = np.array(sens.sens['ECH_ORDERS']).flatten()
-            for ii, sci_obj in enumerate(self.specobjs):
+            for sci_obj in self.specobjs:
                 # JFH Is there a more elegant pythonic way to do this without looping over both orders and sci_obj?
                 indx = np.where(ech_orders == sci_obj.ECH_ORDER)[0]
                 if indx.size == 1:
-                    sci_obj.apply_flux_calib(sens.sens['SENS_COEFF'][indx[0]], sens.sens['SENS_COEFF'][indx[0]],
-                                            # sens.wave[:, indx[0]], sens.zeropoint[:, indx[0]],
+                    tellmodel = sens.telluric.model['TELLURIC'][indx[0], :] if tell else None
+                    sci_obj.apply_flux_calib(sens.wave[:, indx[0]], sens.zeropoint[:, indx[0]],
                                              self.header['EXPTIME'],
                                              extinct_correct=_extinct_correct,
+                                             tellmodel=tellmodel,
                                              extrap_sens=par['extrap_sens'],
                                              longitude=spectrograph.telescope['longitude'],
                                              latitude=spectrograph.telescope['latitude'],
                                              extinctfilepar=par['extinct_file'],
-                                             airmass=float(self.header['AIRMASS']),
-                                             blaze=blaze_function[ii] if blaze_function is not None else None)
+                                             airmass=float(self.header['AIRMASS']))
                 elif indx.size == 0:
                     msgs.info('Unable to flux calibrate order = {:} as it is not in your sensitivity function. '
                               'Something is probably wrong with your sensitivity function.'.format(sci_obj.ECH_ORDER))
@@ -1149,7 +1149,7 @@ def get_std_trace(detname, std_outfile, chk_version=True):
     return std_tab
 
 
-def lst_to_array(lst, mask=None):
+def lst_to_array(lst):
     """
     Simple method to convert a list to an array
 
@@ -1158,24 +1158,18 @@ def lst_to_array(lst, mask=None):
     Args:
         lst (:obj:`list`):
             Should be number or Quantities
-        mask (`numpy.ndarray`_, optional):
-            Boolean array used to limit to a subset of the list.  True=good
 
     Returns:
         `numpy.ndarray`_, `astropy.units.Quantity`_:  Converted list
     """
-    _mask = np.ones(len(lst), dtype=bool) if mask is None else mask
-
     # Return a Quantity array
     if isinstance(lst[0], units.Quantity):
-        return units.Quantity(lst)[_mask]
-
-    # If all the elements of lst have the same type, np.array(lst)[mask] will work
-    if len(set(map(type, lst))) == 1:
-        return np.array(lst)[_mask]
-
-    # Otherwise, we have to set the array type to object
-    return np.array(lst, dtype=object)[_mask]
+        return units.Quantity(lst)
+    try:
+        return np.array(lst)
+    except ValueError as e:
+        pass
+    return np.array(lst, dtype=object)
 
     # NOTE: The dtype="object" is needed for the case where one element of lst
     # is not a list but None. For example, if trying to unpack SpecObjs OPT fluxes
@@ -1184,5 +1178,4 @@ def lst_to_array(lst, mask=None):
     # [array, array, array, None, array], which makes np.array to fail and give the error
     # "ValueError: setting an array element with a sequence. The requested array has an
     # inhomogeneous shape after 1 dimensions..."
-
 

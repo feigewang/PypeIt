@@ -752,7 +752,7 @@ def sensfunc(wave, counts, counts_ivar, counts_mask, exptime, airmass, std_dict,
 
 
 def get_sensfunc_factor(wave, wave_zp, zeropoint, exptime, tellmodel=None, delta_wave=None, extinct_correct=False,
-                         airmass=None, longitude=None, latitude=None, extinctfilepar=None, extrap_sens=False, blaze=None):
+                         airmass=None, longitude=None, latitude=None, extinctfilepar=None, extrap_sens=False):
     """
     Get the final sensitivity function factor that will be multiplied into a spectrum in units of counts to flux calibrate it.
     This code interpolates the sensitivity function and can also multiply in extinction and telluric corrections.
@@ -768,8 +768,10 @@ def get_sensfunc_factor(wave, wave_zp, zeropoint, exptime, tellmodel=None, delta
             Zeropoint, i.e. sensitivity function
         exptime (float):
             Exposure time in seconds
-        tellmodel (float, `numpy.ndarray`_, optional):
-            Apply telluric correction if it is passed it (shape = (nspec,)). Note this is deprecated.
+        tellmodel (float `numpy.ndarray`_, optional):
+            Apply telluric correction if it is passed it (shape = (nspec,)).
+            Note this is only used to generate the std fluxed QA plot. It should be None otherwise.
+            To telluric correct the data, use the telluric correct method.
         delta_wave (float, `numpy.ndarray`_, optional):
             The wavelength sampling of the spectrum to be flux calibrated.
         extinct_correct (bool, optional)
@@ -787,10 +789,6 @@ def get_sensfunc_factor(wave, wave_zp, zeropoint, exptime, tellmodel=None, delta
             Used for extinction correction
         extrap_sens (bool, optional):
             Extrapolate the sensitivity function (instead of crashing out)
-        blaze (`numpy.ndarray`_, optional):
-            Blaze array for the spectrum to be flux calibrated.
-            It is already in log10 units.
-            This is used to add the blaze to the sensitivity function.
 
     Returns
     -------
@@ -819,44 +817,32 @@ def get_sensfunc_factor(wave, wave_zp, zeropoint, exptime, tellmodel=None, delta
 #    print(f'get_sensfunc_factor: {np.amin(wave_zp):.1f}, {np.amax(wave_zp):.1f}, '
 #          f'{np.amin(wave[wave_mask]):.1f}, {np.amax(wave[wave_mask]):.1f}')
 
-    # try:
-    #     zeropoint_obs[wave_mask] \
-    #             = interpolate.interp1d(wave_zp, zeropoint, bounds_error=True)(wave[wave_mask])
-    # except ValueError:
-    #     if extrap_sens:
-    #         zeropoint_obs[wave_mask] \
-    #                 = interpolate.interp1d(wave_zp, zeropoint, bounds_error=False)(wave[wave_mask])
-    #         msgs.warn("Your data extends beyond the bounds of your sensfunc. You should be "
-    #                   "adjusting the par['sensfunc']['extrap_blu'] and/or "
-    #                   "par['sensfunc']['extrap_red'] to extrapolate further and recreate your "
-    #                   "sensfunc. But we are extrapolating per your direction. Good luck!")
-    #     else:
-    #         msgs.error("Your data extends beyond the bounds of your sensfunc. " + msgs.newline() +
-    #                    "Adjust the par['sensfunc']['extrap_blu'] and/or "
-    #                    "par['sensfunc']['extrap_red'] to extrapolate further and recreate "
-    #                    "your sensfunc.")
-    if blaze is None:
-        zeropoint_obs[wave_mask] = eval_zeropoint(wave_zp, 'legendre', wave[wave_mask],
-                                                  np.amin(wave[wave_mask]), np.amax(wave[wave_mask]))
-    else:
-        blaze_per_ang = blaze[wave_mask] - np.log10(_delta_wave[wave_mask])
-        # Correct the sensitivity function for the blaze
-        msgs.info("Adding the blaze to the sensitivity function")
-        zeropoint_obs[wave_mask] = eval_zeropoint(wave_zp, 'legendre', wave[wave_mask],
-                                                  np.amin(wave[wave_mask]), np.amax(wave[wave_mask]),
-                                                  log10_blaze_func_per_ang=blaze_per_ang)
+    try:
+        zeropoint_obs[wave_mask] \
+                = interpolate.interp1d(wave_zp, zeropoint, bounds_error=True)(wave[wave_mask])
+    except ValueError:
+        if extrap_sens:
+            zeropoint_obs[wave_mask] \
+                    = interpolate.interp1d(wave_zp, zeropoint, bounds_error=False)(wave[wave_mask])
+            msgs.warn("Your data extends beyond the bounds of your sensfunc. You should be "
+                      "adjusting the par['sensfunc']['extrap_blu'] and/or "
+                      "par['sensfunc']['extrap_red'] to extrapolate further and recreate your "
+                      "sensfunc. But we are extrapolating per your direction. Good luck!")
+        else:
+            msgs.error("Your data extends beyond the bounds of your sensfunc. " + msgs.newline() +
+                       "Adjust the par['sensfunc']['extrap_blu'] and/or "
+                       "par['sensfunc']['extrap_red'] to extrapolate further and recreate "
+                       "your sensfunc.")
 
-    plt.plot(wave[wave>0], zeropoint_obs[wave>0], 'r')
-    plt.show()
     # This is the S_lam factor required to convert N_lam = counts/sec/Ang to
     # F_lam = 1e-17 erg/s/cm^2/Ang, i.e.  F_lam = S_lam*N_lam
     sensfunc_obs = Nlam_to_Flam(wave, zeropoint_obs)
 
-    # TODO Telluric corrections via this method are deprecated
+    # Telluric corrections used here only to generate the std fluxed QA plot
     # Did the user request a telluric correction?
     if tellmodel is not None:
         # This assumes there is a separate telluric key in this dict.
-        msgs.warn("Telluric corrections via this method are deprecated")
+        #msgs.warn("Telluric corrections via this method are deprecated")
         msgs.info('Applying telluric correction')
         sensfunc_obs = sensfunc_obs * (tellmodel > 1e-10) / (tellmodel + (tellmodel < 1e-10))
 
