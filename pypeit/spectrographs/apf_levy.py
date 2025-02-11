@@ -78,8 +78,7 @@ class APFLevySpectrograph(spectrograph.Spectrograph):
 
         # no sky subtraction on standard stars
         par['reduce']['skysub']['global_sky_std'] = False
-        par['reduce']['skysub']['no_local_sky'] = True
-
+        
         # skip sky subtraction when searching for objects
         # this is because the sky subtraction is not very good with narrow
         # slits and the usual APF target is bright
@@ -377,7 +376,13 @@ class APFLevySpectrograph(spectrograph.Spectrograph):
             :class:`~pypeit.par.parset.ParSet`: The PypeIt parameter set
             adjusted for configuration specific parameter values.
         """
-        return self.__class__.default_pypeit_par() if inp_par is None else inp_par
+        par = super().config_specific_par(scifile, inp_par=inp_par)
+        decker = self.get_meta_value(scifile, 'decker')
+
+        if decker == '8.0':
+            par['reduce']['skysub']['no_local_sky'] = True
+
+        return par
 
     @property
     def norders(self):
