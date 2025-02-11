@@ -602,7 +602,7 @@ class SpecObjs:
                 chk &= (sub_box or sub_opt)
         return chk
 
-    def apply_flux_calib(self, par, spectrograph, sens):
+    def apply_flux_calib(self, par, spectrograph, sens, tell=False):
         """
         Flux calibrate the  object spectra (``sobjs``) using the provided
         sensitivity function (``sens``).
@@ -614,6 +614,10 @@ class SpecObjs:
                 PypeIt Spectrograph class
             sens (:class:`~pypeit.sensfunc.SensFunc`):
                 PypeIt Sensitivity function class
+            tell (:obj:`bool`, optional):
+                If True, apply telluric correction as well. The telluric model
+                comes from the sensitivity function. This is generally only
+                used for std fluxed QA plots.
         """
 
         _extinct_correct = (True if sens.algorithm == 'UVIS' else False) \
@@ -624,9 +628,11 @@ class SpecObjs:
         if spectrograph.pypeline in ['MultiSlit','SlicerIFU']:
             for ii, sci_obj in enumerate(self.specobjs):
                 if sens.wave.shape[1] == 1:
+                    tellmodel = sens.telluric.model['TELLURIC'][0, :] if tell else None
                     sci_obj.apply_flux_calib(sens.wave[:, 0], sens.zeropoint[:, 0],
                                              self.header['EXPTIME'],
                                              extinct_correct=_extinct_correct,
+                                             tellmodel=tellmodel,
                                              longitude=spectrograph.telescope['longitude'],
                                              latitude=spectrograph.telescope['latitude'],
                                              extinctfilepar=par['extinct_file'],
@@ -636,9 +642,11 @@ class SpecObjs:
                     # This deals with the multi detector case where the sensitivity function is spliced. Note that
                     # the final sensitivity function written to disk is  the spliced one. This functionality is only
                     # used internal to sensfunc.py for fluxing the standard for the QA plot.
+                    tellmodel = sens.telluric.model['TELLURIC'][ii, :] if tell else None
                     sci_obj.apply_flux_calib(sens.wave[:, ii], sens.zeropoint[:, ii],
                                              self.header['EXPTIME'],
                                              extinct_correct=_extinct_correct,
+                                             tellmodel=tellmodel,
                                              longitude=spectrograph.telescope['longitude'],
                                              latitude=spectrograph.telescope['latitude'],
                                              extinctfilepar=par['extinct_file'],
@@ -658,9 +666,11 @@ class SpecObjs:
                 # JFH Is there a more elegant pythonic way to do this without looping over both orders and sci_obj?
                 indx = np.where(ech_orders == sci_obj.ECH_ORDER)[0]
                 if indx.size == 1:
+                    tellmodel = sens.telluric.model['TELLURIC'][indx[0], :] if tell else None
                     sci_obj.apply_flux_calib(sens.wave[:, indx[0]], sens.zeropoint[:, indx[0]],
                                              self.header['EXPTIME'],
                                              extinct_correct=_extinct_correct,
+                                             tellmodel=tellmodel,
                                              extrap_sens=par['extrap_sens'],
                                              longitude=spectrograph.telescope['longitude'],
                                              latitude=spectrograph.telescope['latitude'],
