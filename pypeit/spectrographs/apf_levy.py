@@ -379,7 +379,7 @@ class APFLevySpectrograph(spectrograph.Spectrograph):
         par = super().config_specific_par(scifile, inp_par=inp_par)
         decker = self.get_meta_value(scifile, 'decker')
 
-        if decker == '8.0':
+        if decker == '3.0':
             par['reduce']['skysub']['no_local_sky'] = True
 
         return par
