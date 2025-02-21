@@ -693,61 +693,67 @@ class GeminiGMOSSpectrograph(spectrograph.Spectrograph):
 
         # Slurp in the slitmask info
         self.get_slitmask(maskfile)
+#
+#         # Binning of flat
+#         _, bin_spat= parse.parse_binning(binning)
+#
+#         # Slit center
+#         slit_coords = SkyCoord(ra=self.slitmask.onsky[:,0],
+#                                dec=self.slitmask.onsky[:,1], unit='deg')
+#         mask_coord = SkyCoord(ra=self.slitmask.mask_radec[0],
+#                               dec=self.slitmask.mask_radec[1], unit='deg')
+#
+#         # Load up the acquisition image (usually a sciframe)
+#         hdul_acq = fits.open(wcs_file)
+#         acq_binning = self.get_meta_value(self.get_headarr(hdul_acq), 'binning')
+#         _, bin_spat_acq = parse.parse_binning(acq_binning)
+#         wcss = [wcs.WCS(hdul_acq[i].header) for i in range(1, len(hdul_acq))]
+#
+#         left_edges = []
+#         right_edges = []
+#         for islit in range(self.slitmask.nslits):
+#             # DEBUGGING
+#             #islit = 14  # 10043
+#             # Left coord
+#             left_coord = slit_coords[islit].directional_offset_by(
+#                 self.slitmask.onsky[islit,4]*units.deg - 180.*units.deg,
+#                 self.slitmask.onsky[islit,2]*units.arcsec/2.)
+#             right_coord = slit_coords[islit].directional_offset_by(
+#                 self.slitmask.onsky[islit,4]*units.deg,
+#                 self.slitmask.onsky[islit,2]*units.arcsec/2.)
+#
+#             got_it = False
+#             for kk, iwcs in enumerate(wcss):
+#                 pix_xy = iwcs.world_to_pixel(left_coord)
+#                 # Do we have the right WCS?
+#                 if 0 < float(pix_xy[0]) < hdul_acq[kk+1].header['NAXIS1']-1:
+#                     left_edges.append(float(pix_xy[1])*bin_spat_acq/bin_spat)
+#                     # Right
+#                     pix_xy2 = iwcs.world_to_pixel(right_coord)
+#                     right_edges.append(float(pix_xy2[1])*bin_spat_acq/bin_spat)
+#                     # Occasionally a slit thinks it is on 2 detectors -- this avoids that
+#                     print(f'matched to {kk}, {pix_xy}, {pix_xy2}')
+#                     break
+#
+#
+# #        DEBUGGING
+# #        tbl = Table()
+# #        tbl['left'] = left_edges
+# #        tbl['right'] = right_edges
+# #        tbl['ID'] = self.slitmask.slitid
+# #        tbl.sort('left')
+# #        embed(header='641 of gemini_gmos')
+#
+#         # Recast as floats
+#         left_edges = np.array(left_edges).astype(float)
+#         right_edges = np.array(right_edges).astype(float)
+#         sortindx = np.argsort(left_edges)
 
-        # Binning of flat
-        _, bin_spat= parse.parse_binning(binning)
+        tab = Table.read(maskfile, format='fits')
+        left_edges = tab['specbottom'].value
+        right_edges = tab['spectop'].value
+        sortindx = np.argsort(tab['specbottom'].value)
 
-        # Slit center
-        slit_coords = SkyCoord(ra=self.slitmask.onsky[:,0],
-                               dec=self.slitmask.onsky[:,1], unit='deg')
-        mask_coord = SkyCoord(ra=self.slitmask.mask_radec[0],
-                              dec=self.slitmask.mask_radec[1], unit='deg')
-
-        # Load up the acquisition image (usually a sciframe)
-        hdul_acq = fits.open(wcs_file)
-        acq_binning = self.get_meta_value(self.get_headarr(hdul_acq), 'binning')
-        _, bin_spat_acq = parse.parse_binning(acq_binning)
-        wcss = [wcs.WCS(hdul_acq[i].header) for i in range(1, len(hdul_acq))]
-
-        left_edges = []
-        right_edges = []
-        for islit in range(self.slitmask.nslits):
-            # DEBUGGING
-            #islit = 14  # 10043
-            # Left coord
-            left_coord = slit_coords[islit].directional_offset_by(
-                self.slitmask.onsky[islit,4]*units.deg - 180.*units.deg,
-                self.slitmask.onsky[islit,2]*units.arcsec/2.)
-            right_coord = slit_coords[islit].directional_offset_by(
-                self.slitmask.onsky[islit,4]*units.deg,
-                self.slitmask.onsky[islit,2]*units.arcsec/2.)
-
-            got_it = False
-            for kk, iwcs in enumerate(wcss):
-                pix_xy = iwcs.world_to_pixel(left_coord)
-                # Do we have the right WCS?
-                if 0 < float(pix_xy[0]) < hdul_acq[kk+1].header['NAXIS1']-1:
-                    left_edges.append(float(pix_xy[1])*bin_spat_acq/bin_spat)
-                    # Right
-                    pix_xy2 = iwcs.world_to_pixel(right_coord)
-                    right_edges.append(float(pix_xy2[1])*bin_spat_acq/bin_spat)
-                    # Occasionally a slit thinks it is on 2 detectors -- this avoids that
-                    print(f'matched to {kk}, {pix_xy}, {pix_xy2}')
-                    break
-
-
-#        DEBUGGING
-#        tbl = Table()
-#        tbl['left'] = left_edges
-#        tbl['right'] = right_edges
-#        tbl['ID'] = self.slitmask.slitid
-#        tbl.sort('left')
-#        embed(header='641 of gemini_gmos')
-
-        # Recast as floats
-        left_edges = np.array(left_edges).astype(float)
-        right_edges = np.array(right_edges).astype(float)
-        sortindx = np.argsort(left_edges)
         return left_edges, right_edges, sortindx, self.slitmask
 
 class GeminiGMOSSHamSpectrograph(GeminiGMOSSpectrograph):
