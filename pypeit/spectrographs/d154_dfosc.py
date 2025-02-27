@@ -29,7 +29,7 @@ class DFOSCSpectrograph(spectrograph.Spectrograph):
     header_name = 'DFOSC_FASU'
     pypeline = 'MultiSlit'
     supported = True
-    comment = 'For horizontal slits only. Grisms 3, 5, 7, 9, 10, 11, 13, 14, 15, 16 for DFOSC'
+    comment = 'For horizontal slits only. Grisms 3, 5, 7, 9, 10, 11, 13, 14, 15 for DFOSC'
 
     def get_detector_par(self, det, hdu=None):
         """
@@ -80,7 +80,7 @@ class DFOSCSpectrograph(spectrograph.Spectrograph):
             xgap            = 0.,
             ygap            = 0.,
             ysize           = 1.,
-            platescale      = 0.2138,
+            platescale      = 0.396,
             mincounts       = -1e10,
             darkcurr        = 1.3,      # e-/pix/hr
             saturation      = 700000.,  # ADU
@@ -313,7 +313,7 @@ class DFOSCSpectrograph(spectrograph.Spectrograph):
             par['calibrations']['wavelengths']['reid_arxiv'] = 'd154_dfosc_grism8.fits'
         elif self.get_meta_value(scifile, 'dispname') == 'Grism_14':
             par['calibrations']['wavelengths']['reid_arxiv'] = 'd154_dfosc_grism14.fits'
-        elif self.get_meta_value(scifile, 'dispname') == 'Grism_#15':
+        elif self.get_meta_value(scifile, 'dispname') == 'Grism_15':
             par['calibrations']['wavelengths']['reid_arxiv'] = 'd154_dfosc_grism15_1.fits'
         else:
             msgs.warn('d154_dfosc.py: YOU NEED TO ADD IN THE WAVELENGTH SOLUTION FOR THIS GRISM')
@@ -380,7 +380,7 @@ class DFOSCSpectrographVert(DFOSCSpectrograph):
             xgap            = 0.,
             ygap            = 0.,
             ysize           = 1.,
-            platescale      = 0.2138,
+            platescale      = 0.396,
             mincounts       = -1e10,
             darkcurr        = 1.3,      # e-/pix/hr
             saturation      = 700000.,  # ADU
