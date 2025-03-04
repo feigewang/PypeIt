@@ -29,9 +29,9 @@
     
     options:
       -h, --help            show this help message and exit
-      -v VERBOSITY, --verbosity VERBOSITY
+      -v, --verbosity VERBOSITY
                             Verbosity level between 0 [none] and 2 [all]
-      -r REDUX_PATH, --redux_path REDUX_PATH
+      -r, --redux_path REDUX_PATH
                             Path to directory for the reduction. Only advised for
                             testing
       -m, --do_not_reuse_calibs
