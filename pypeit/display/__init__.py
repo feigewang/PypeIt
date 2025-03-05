@@ -7,7 +7,7 @@ import numpy
 
 from ginga.misc.Bunch import Bunch
 
-required_plugins = ['SlitWavelength']
+required_plugins = ['SlitWavelength', 'Spec1dView']
 
 def plugins_available(return_report=False):
     available_plugins = []

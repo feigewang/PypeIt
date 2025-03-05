@@ -11,7 +11,6 @@ class ChkPlugins(scriptbase.ScriptBase):
     @staticmethod
     def main(args):
 
-        import os
         from pypeit.display import required_plugins, plugins_available
         from pypeit import msgs
 

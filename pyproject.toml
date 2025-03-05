@@ -159,7 +159,7 @@ pypeit_skysub_regions = "pypeit.scripts.skysub_regions:SkySubRegions.entry_point
 pypeit_view_fits = "pypeit.scripts.view_fits:ViewFits.entry_point"
 pypeit_show_pixflat = "pypeit.scripts.show_pixflat:ShowPixFlat.entry_point"
 
-[project.entry_points."ginga.rv.plugins"]
+[project.entry-points."ginga.rv.plugins"]
 
 SlitWavelength = "pypeit.display:setup_SlitWavelength"
 Spec1dView = "pypeit.display:setup_Spec1dView"
