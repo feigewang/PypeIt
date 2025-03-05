@@ -3,7 +3,7 @@ name = "pypeit"
 dynamic = ["version"]
 authors = [
     { name = "PypeIt Collaboration", email = "pypeit@ucolick.org" }
-}
+]
 license = {file = "LICENSE.rst"}
 description = "PypeIt Spectroscopic Reduction"
 keywords = [
