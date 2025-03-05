@@ -188,7 +188,7 @@ class EdgeTraceBitMask(BitMask):
         """
         List the flags that mean the trace is bad.
         """
-        return list(set(self.bits.keys()) - set(self.insert_flags))
+        return list(set(self.bits.keys()) - set(self.insert_flags + ['BOXSLIT']))
 
     @property
     def insert_flags(self):
