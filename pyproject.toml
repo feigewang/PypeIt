@@ -102,7 +102,7 @@ Documentation = "https://pypeit.readthedocs.io/"
 
 # non-GUI scripts
 pypeit_arxiv_solution = "pypeit.scripts.arxiv_solution:ArxivSolution.entry_point"
-pyepit_c_enabled = "pypeit.scripts.c_enabled:CEnabled.entry_point"
+pypeit_c_enabled = "pypeit.scripts.c_enabled:CEnabled.entry_point"
 pypeit_cache_github_data = "pypeit.scripts.cache_github_data:CacheGithubData.entry_point"
 pypeit_clean_cache = "pypeit.scripts.clean_cache:CleanCache.entry_point"
 pypeit_chk_flexure = "pypeit.scripts.chk_flexure:ChkFlexure.entry_point"
