@@ -459,39 +459,3 @@ class APFLevySpectrograph(spectrograph.Spectrograph):
 
         return self.get_detector_par(1, hdu=hdu), \
                 full_image, hdu, head0['EXPTIME'], rawdatasec_img, oscansec_img
-
-# def apf_read_chip(hdu):
-#     """ Read the APF detector
-
-#     Parameters
-#     ----------
-#     hdu : HDUList
-
-#     Returns
-#     -------
-#     data : ndarray
-#     oscan : ndarray
-#     """
-
-#     # Extract datasec from header
-#     datsec = hdu[0].header['DATASEC']
-#     postpix = hdu[0].header['COVER']
-
-
-#     x1_dat, x2_dat, y1_dat, y2_dat = np.array(parse.load_sections(datsec)).flatten()
-#     x1_det, x2_det, y1_det, y2_det = np.array(parse.load_sections(detsec)).flatten()
-
-#     # This rotates the image to be increasing wavelength to the top
-#     #data = np.rot90((hdu[0].data).T, k=2)
-#     #nx=data.shape[0]
-#     #ny=data.shape[1]
-
-#     # Science data
-#     fullimage = hdu[0].data
-#     data = fullimage[x1_dat:x2_dat,y1_dat:y2_dat]
-
-#     # Overscan
-#     oscan = fullimage[:,y2_dat:]
-
-#     # Return
-#     return data, oscan
