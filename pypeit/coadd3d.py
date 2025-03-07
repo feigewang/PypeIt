@@ -269,7 +269,7 @@ class DataCube(datamodel.DataContainer):
         sobjs, spec2d, wl_img, wl_ivar, wl_gpm = datacube.extract_point_source(
             self.wave, self.flux.T, self.ivar.T, self.bpm.T, self._wcs, exptime, 
             fluxed=self.fluxed, whitelight_range=parset['whitelight_range'],
-            fwhm = parset['fwhm'], snr_thresh = parset['snr_thresh'], 
+            fwhm = parset['fwhm'], no_skysub=parset['no_skysub'], snr_thresh = parset['snr_thresh'], 
             manual_position=manual_position,  boxcar_radius=parset['boxcar_radius'], 
             opt_prof_method=parset['opt_prof_method'],
             spectrograph = self.spectrograph, show_qa=debug)

@@ -1935,7 +1935,7 @@ class CubeExtractionPar(ParSet):
     """
 
     def __init__(self, output_filename=None, whitelight_range=None, fwhm=None, 
-                 snr_thresh=None,  manual=None, boxcar_radius=None, opt_prof_method=None):
+                 snr_thresh=None,  manual=None, boxcar_radius=None, opt_prof_method=None, no_skysub=None):
 
         # Grab the parameter names and values from the function
         # arguments
@@ -2023,6 +2023,10 @@ class CubeExtractionPar(ParSet):
                                 'corresponding to the fwhm parameter.'
 
 
+        defaults['no_skysub'] = False
+        dtypes['no_skysub'] = bool
+        descr['no_skysub'] = 'If True, the cube will have the residual sky-subtracted before extraction, and the whitelight image will also be residual sky-subtracted.'
+
         # Instantiate the parameter set
         super(CubeExtractionPar, self).__init__(list(pars.keys()),
                                       values=list(pars.values()),
@@ -2038,7 +2042,7 @@ class CubeExtractionPar(ParSet):
 
         # Basic keywords
         parkeys = ['output_filename', 'whitelight_range', 'fwhm', 
-                'snr_thresh', 'manual', 'boxcar_radius', 'opt_prof_method']        
+                'snr_thresh', 'manual', 'boxcar_radius', 'opt_prof_method', 'no_skysub']        
 
         badkeys = np.array([pk not in parkeys for pk in k])
         if np.any(badkeys):

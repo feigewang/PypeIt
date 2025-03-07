@@ -336,7 +336,7 @@ def correct_grating_shift(wave_eval, wave_curr, spl_curr, wave_ref, spl_ref, ord
 
 def extract_point_source(wave, flxcube, ivarcube, bpmcube, wcscube, exptime,
                          whitelight_range=None, fluxed=False, subpixel=20,
-                         boxcar_radius=None, fwhm=1.5, snr_thresh=5.0, manual_position=None,
+                         boxcar_radius=None, fwhm=1.5, no_skysub=False, snr_thresh=5.0, manual_position=None,
                          opt_prof_method='fit_gauss',  spectrograph='keck_kcrm', show_qa=False):
     """
     Extract a spectrum of a standard star from a datacube
@@ -376,6 +376,8 @@ def extract_point_source(wave, flxcube, ivarcube, bpmcube, wcscube, exptime,
         Note that if the opt_prof_method is set to 'user_gauss', this parameter will be also be used as
         the FWHM of the the 2D (symmetric) Gaussian spatial profile for optimal extraction.
         Default is 1.5 arcseconds.
+    no_sksyub : bool, optional
+        If True, the residual sky will not be subtracted from the datacube or the whitelight image. Default is False.
     snr_thresh : float, optional
         The signal-to-noise ratio threshold to use when determining the initial object position in 
         the whitelight image with DAOStarFinder (this is the nsigma parameter in 
@@ -514,17 +516,21 @@ def extract_point_source(wave, flxcube, ivarcube, bpmcube, wcscube, exptime,
     # Subtract off the object mask region, so that we just have an annulus around the object
     smask -= mask
 
-    msgs.info("Subtracting the residual sky")
-    # Subtract the residual sky from the datacube
-    skymask = np.logical_not(bpmcube) * smask
-    skycube = _flxcube * skymask
-    skyspec = skycube.sum(axis=(0,1))
-    nrmsky = skymask.sum(axis=(0,1))
-    skyspec *= utils.inverse(nrmsky)
-    _flxcube -= skyspec.reshape((1, 1, numwave))
-    # Now subtract the residual sky from the white light image
-    sky_val = np.sum(wl_img[:, :, np.newaxis] * smask) / np.sum(smask)
-    wl_img -= sky_val
+    if not no_skysub:
+        msgs.info("Subtracting the residual sky")
+        # Subtract the residual sky from the datacube
+        skymask = np.logical_not(bpmcube) * smask
+        skycube = _flxcube * skymask
+        skyspec = skycube.sum(axis=(0,1))
+        nrmsky = skymask.sum(axis=(0,1))
+        skyspec *= utils.inverse(nrmsky)
+        _flxcube -= skyspec.reshape((1, 1, numwave))
+        # Now subtract the residual sky from the white light image
+        sky_val = np.sum(wl_img[:, :, np.newaxis] * smask) / np.sum(smask)
+        wl_img -= sky_val
+    else: 
+        msgs.info("The residual sky will not be subtracted")
+        skyspec = np.zeros(numwave)
 
     msgs.info("Extracting a boxcar spectrum of datacube")
     # Construct an image that contains the fraction of flux included in the
