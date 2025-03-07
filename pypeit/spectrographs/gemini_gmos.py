@@ -756,6 +756,14 @@ class GeminiGMOSSpectrograph(spectrograph.Spectrograph):
 
         return left_edges, right_edges, sortindx, self.slitmask
 
+    @property
+    def spec_min_max(self, maskfile=None):
+        if maskfile is not None:
+            tab = Table.read(maskfile, format='fits')
+            return tab['specleft'].value, tab['specright'].value
+        else:
+            return None
+
 class GeminiGMOSSHamSpectrograph(GeminiGMOSSpectrograph):
     """
     Child to handle Gemini/GMOS-S instrument with Hamamatsu detector

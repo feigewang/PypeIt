@@ -5723,6 +5723,12 @@ class EdgeTraceSet(calibframe.CalibFrame):
             specmin = specmin[indx]/binspec
             specmax = specmax[indx]/binspec
 
+        # maskfiles = self.traceimg.files[0] if self.par['maskdesign_filename'] is None \
+        #     else self.par['maskdesign_filename']
+        # embed()
+        # specmin, specmax = self.spectrograph.spec_min_max(maskfiles[0])
+        # embed()
+
         if self.par['mask_off_detector']:
             # check and mask portions of the slits/orders that are more than 50% off the detector
             _slits = self.edge_fit[:,gpm].reshape(self.nspec, -1, 2)
