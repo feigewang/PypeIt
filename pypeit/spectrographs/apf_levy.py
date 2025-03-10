@@ -88,6 +88,8 @@ class APFLevySpectrograph(spectrograph.Spectrograph):
         par['reduce']['findobj']['maxnumber_sci'] = 1
         par['reduce']['findobj']['maxnumber_std'] = 1
 
+        par['reduce']['extract']['boxcar_radius'] = 2.4
+
         return par
 
 
