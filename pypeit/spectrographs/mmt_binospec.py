@@ -358,83 +358,98 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         return np.zeros(len(fitstbl), dtype=bool)
 
     def get_slitmask(self, filename, det):
+        """
+        Parse Binospec slitmask file and construct a SlitMask object with target and slit metadata.
 
-        #Open file
+        This function reads a FITS file describing a multi-slit mask for a specified Binospec
+        detector, extracts geometric and target information, computes relevant positional offsets,
+        and constructs a `SlitMask` object used for downstream processing and plotting.
+
+        Parameters
+        ----------
+        filename : :obj:`str`
+            Path to the slitmask FITS file.
+        det : :obj:`int`
+            Detector number (1 or 2).
+
+        Returns
+        -------
+        slitmask : :class:`SlitMask`
+            An object containing geometry, target positions, and metadata for each slit, defined
+            in PypeIt/pypeit/spectrographs/slitmask.py
+
+        Notes
+        -----
+        - Target-slit alignment is characterized via distances from slit edges.
+        - Slit corners and on-sky positions are stored for each target.
+        """
+
+        # Open the FITS file
         hdu = fits.open(filename)
 
-         #Determine slit number
+        # Select appropriate extension for detector 1 or 2
         if det == 1:
             mask_fits = hdu[9].data[0]
-
         elif det == 2:
             mask_fits = hdu[10].data[0]
-
         else:
             raise ValueError("Not a valid detector number. Try 1 or 2.")
 
-
-
-        # Target data
+        # Identify TARGET objects and number of slits
         target_type = mask_fits['TARGET_TYPE']
         targ = np.where(target_type == 'TARGET')[0]
         numslits = mask_fits['NTARGETS']
 
-        # X/Y coordinates of targets and slits (arcsec)
+        # Extract slit centers and target positions in arcseconds
         slit_mean_x = np.mean(mask_fits['POLY_X'], axis=0)[targ]
         slit_mean_y = np.mean(mask_fits['POLY_Y'], axis=0)[targ]
         x_targ = mask_fits['SLITX'][targ]
         y_targ = mask_fits['SLITY'][targ]
 
+        # Compute offsets from slit centers
         delta_x = x_targ - slit_mean_x
         delta_y = y_targ - slit_mean_y
-
         slit_length_half = mask_fits['SLIT_LENGTH'][targ] / 2.
 
-        # Projected distance (in arcsec) of the object from the left and right (top and bot) edges of the slit
+        # Calculate projected distances to top/bottom edges of slits
         topdist = np.round(slit_length_half - delta_y, 3)
         botdist = np.round(slit_length_half + delta_y, 3)
 
-        # Coordinates
+        # Extract basic object metadata
         obj_ra = mask_fits['RA'][targ]
         obj_dec = mask_fits['DEC'][targ]
-
-
         objname = mask_fits['TARGET_NAME'][targ]
         objid = mask_fits['TARGET_ID'][targ]
 
-
-        #   - Pull out the slit ID, object ID, name, object coordinates, top and bottom distance
+        # Assemble object array: [slit_id, id, ra, dec, name, mag, mag_band, top, bot]
         objects = np.array([np.array(mask_fits['SLIT_ID'][targ], dtype=int),
                             objid,
                             obj_ra,
                             obj_dec,
                             objname,
                             np.array(mask_fits['MAG'][targ], dtype=float),
-                            ['None'] * mask_fits['SLIT_ID'][targ].size,  # no magnitude band
+                            ['None'] * mask_fits['SLIT_ID'][targ].size,
                             topdist,
                             botdist]).T
 
-        # Mask pointing
+        # Slitmask pointing coordinates (mask center RA/Dec)
         mask_coord = SkyCoord(mask_fits['CENTERRA'], mask_fits['CENTERDEC'],
                               unit=('hourangle', 'deg'))
 
-        # PA corresponding to positive x on detector (spatial)
-        # Still unsure of which one is correct for MMT/Binospec
+        # Position angle corresponding to detector +x axis (spatial direction)
         posx_pa = hdu[1].header['POSANG'] - 180
-        # posx_pa = hdu[1].header['POSANG']
-
         if posx_pa < 0:
             posx_pa += 360.
 
-        # Np.zeros serves as placeholder for potential slit tilt array
+        # Slit position angles and sign of offset (accounting for up/down location)
         slit_pas = posx_pa + np.zeros(numslits)
         off_signs = np.ones_like(slit_pas)
         negy = delta_y < 0.
         off_signs[negy] = -1.
 
-        # Convert Slit X/Y to RA/DEC
+        # Compute slit center RA/Dec via spherical offset from target position
         obj_coord = SkyCoord(ra=obj_ra, dec=obj_dec, unit='deg')
-        offsets = np.sqrt(delta_x ** 2 + delta_y ** 2)  # Distance from target to slit center
+        offsets = np.sqrt(delta_x ** 2 + delta_y ** 2)
 
         slit_ra, slit_dec = [], []
         for offset, coord, slit_pa, off_sign in zip(offsets, obj_coord, slit_pas, off_signs):
@@ -443,13 +458,13 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             slit_ra.append(slit_coord.ra.deg)
             slit_dec.append(slit_coord.dec.deg)
 
-        # Pull out corner data
+        # Extract slit corner coordinates
         poly_x_T = np.squeeze(mask_fits['POLY_X'].T)[targ]
         poly_y_T = np.squeeze(mask_fits['POLY_Y'].T)[targ]
         corners = np.stack((poly_x_T, poly_y_T), axis=-1)
-        corners = corners[:, [3, 0, 1, 2], :]
+        corners = corners[:, [3, 0, 1, 2], :]  # reorder to clockwise
 
-        # Instantiate the slit mask object and return it
+        # Construct and return the slitmask object
         self.slitmask = SlitMask(
             np.array(corners),
             slitid=np.array(mask_fits['SLIT_ID'][targ], dtype=int),
@@ -464,7 +479,6 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         )
 
         return self.slitmask
-
 
     def get_rawimage(self, raw_file, det):
         """
@@ -579,8 +593,52 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
                np.fliplr(np.flipud(oscansec_img))
 
     def bino_get_slit_region_pix(self, filename, det, Nx=4096, Ny=4112, ratio=1.0, pady=0):
+        """
+        Convert Binospec slitmask geometry into pixel-space slit regions on the detector.
 
-        # Re-initiate slitmask
+        This function computes the pixel-based rectangular regions corresponding to each slit
+        in the detector image, based on the slitmask design file. It calculates x/y ranges for
+        each slit, the pixel position of the target within each slit, and returns these along
+        with the SlitMask object.
+
+        Parameters
+        ----------
+        filename : :obj:`str`
+            Path to the slitmask FITS file (produced by the Binospec mask design tool).
+        det : :obj:`int`
+            Detector number (1 or 2) to extract the correct slitmask data extension.
+        Nx : :obj:`int`, optional
+            Number of columns in the detector image (default is 4096).
+        Ny : :obj:`int`, optional
+            Number of rows in the detector image (default is 4112).
+        ratio : :obj:`float`, optional
+            Scaling factor applied to the slit dimensions (e.g., for padding or plotting).
+        pady : :obj:`float`, optional
+            Extra padding (in pixels) to expand the calculated x/y slit boundaries.
+
+        Returns
+        -------
+        region : :obj:`list`
+            A list with the following four elements:
+            - slit_x_range : ndarray of shape (N, 2)
+                Pixel-space x-limits [xmin, xmax] for each slit.
+            - slit_y_range : ndarray of shape (N, 2)
+                Pixel-space y-limits [ymin, ymax] for each slit.
+            - x_slitobj_pix : ndarray of shape (N,)
+                X pixel position of each target within its slit.
+            - y_slitobj_pix : ndarray of shape (N,)
+                Y pixel position of each target within its slit.
+        slitmask : :class:`SlitMask`
+            The SlitMask object populated from the input file.
+
+        Notes
+        -----
+        - Converts angular slit coordinates (arcsec) to pixel space using detector scale.
+        - Applies geometric transformations including inversion of y-axis and padding.
+        - Slit tilt and rotation are not explicitly handled (slits assumed rectangular).
+        """
+
+        # Re-initiate slitmask from file
         if filename is not None:
             self.get_slitmask(filename, det)
         else:
@@ -591,7 +649,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
         hdu = fits.open(filename)
 
-        # Determine slit number
+        # Read mask data for correct detector
         if det == 1:
             mask_fits = hdu[9].data[0]
         elif det == 2:
@@ -601,15 +659,16 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
         numslits = len(self.slitmask.slitid)
 
-        # Output: 2 rows (min, max) x N slits --> placeholder for slit x/y ranges
+        # Output arrays to hold min/max x/y limits per slit
         res_x = np.zeros((2, numslits))
         res_y = np.zeros((2, numslits))
 
-        # Object top and bottom distances from the slit edges
+        # Distances from object to slit edges (arcsec)
         topdist = np.array(self.slitmask.objects[:, 7]).astype(float)
         botdist = np.array(self.slitmask.objects[:, 8]).astype(float)
         width = np.array(self.slitmask.width)
 
+        # Slit and object positions in arcsec
         x_slits = np.array(self.slitmask.center[:, 0])
         x_obj = x_slits
 
@@ -617,17 +676,18 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         y_slitsh = -np.array(self.slitmask.corners[:, 0, 1])
         y_slitsl = -np.array(self.slitmask.corners[:, 2, 1])
         y_obj = (y_slits + (topdist - botdist) / 2)
+
         dx_slits = self.slitmask.length
         dy_slits = width
 
-        #Constants
+        # Constants for conversion to pixel space
         dy0 = -200.0
-        y_scl = 24.555832 if det == 1 else 24.548194
+        y_scl = 24.555832 if det == 1 else 24.548194  # arcsec to pixel scale
 
-        #Pull mask corners
+        # Mask center reference point
         mask_corners = np.array(mask_fits['MASK_CORNERS'])
 
-        #Convert to pixel coordinates
+        # Convert from arcsec to pixel coordinates
         x_slits_pix = (x_slits - mask_corners[0]) * y_scl + Nx / 2.0
         x_slitobj_pix = (x_obj - mask_corners[0]) * y_scl + Nx / 2.0
         y_slits_pix = Ny - 1 - ((y_slits - mask_corners[1]) * y_scl) + dy0
@@ -635,22 +695,20 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         y_slitsl_pix = Ny - 1 - ((y_slitsl - mask_corners[1]) * y_scl) + dy0
         y_slitsh_pix = Ny - 1 - ((y_slitsh - mask_corners[1]) * y_scl) + dy0
 
-        #Flip limits if needed
+        # Ensure y upper/lower limits are in correct order
         if y_slitsh_pix[0] < y_slitsl_pix[0]:
             y_slitsh_pix, y_slitsl_pix = y_slitsl_pix.copy(), y_slitsh_pix.copy()
 
-        #Pixel sizes
+        # Scale slit sizes to pixels
         dx_slits_pix = dx_slits * y_scl * ratio
         dy_slits_pix = dy_slits * y_scl * ratio
 
-
-        #Loop through slits to append x/y ranges to res_x/res_y
+        # Loop over slits and compute bounding boxes in pixels
         for i in range(numslits):
             xmin = round(x_slits_pix[i] - dx_slits_pix[i] / 2.0 - pady)
             xmax = round(x_slits_pix[i] + dx_slits_pix[i] / 2.0 - 1 + pady)
             xmin = max(0, xmin)
             xmax = min(Ny - 1, xmax)
-
             res_x[0, i] = xmin
             res_x[1, i] = xmax
 
@@ -658,21 +716,52 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             ymax = round(y_slits_pix[i] + dy_slits_pix[i] / 2.0 - 1 + pady)
             ymin = max(0, ymin)
             ymax = min(Ny - 1, ymax)
-
             res_y[0, i] = ymin
             res_y[1, i] = ymax
 
-        #Transpose to (2, N)
+        # Transpose to shape (N, 2) and return with object positions
         slit_x_range, slit_y_range = res_x.T, res_y.T
-
         region = [slit_x_range, slit_y_range, x_slitobj_pix, y_slitobj_pix]
 
         return region, self.slitmask
 
-    def plot_mask(self, filename, det):
 
+    def plot_mask(self, filename, det):
+        """
+        Plot the slit mask layout and target positions for one or both detectors.
+
+        This function retrieves slit region data for a given Binospec mask and
+        plots the rectangular slit outlines and target positions for detector 1,
+        detector 2, or both. It is useful for visually validating mask design and
+        target alignment.
+
+        Parameters
+        ----------
+        filename : :obj:`str`
+            Path to the mask design file (e.g., a JSON file containing slit definitions).
+        det : :obj:`int` or :obj:`str`
+            Specifies which detector(s) to plot. Accepts 1, 2, or 'both'.
+
+        Returns
+        -------
+        region_1 : :obj:`tuple`, optional
+            Slit region and target position data for detector 1, if requested.
+        region_2 : :obj:`tuple`, optional
+            Slit region and target position data for detector 2, if requested.
+
+        Notes
+        -----
+        - Slit rectangles are drawn in blue; target positions are plotted in red
+          for detector 1 and green for detector 2.
+        - Assumes `bino_get_slit_region_pix` returns a 4-tuple with:
+            [x_ranges, y_ranges, x_targets, y_targets]
+        - Plots are displayed interactively using matplotlib.
+        """
+
+        # Set font size for all plot elements
         plt.rcParams.update({"font.size": 20})
 
+        # Load slit regions depending on the selected detector(s)
         if det == 'both':
             fig, (axA, axB) = plt.subplots(ncols=2, figsize=(16, 16))
             region_1 = self.bino_get_slit_region_pix(filename, 1)[0]
@@ -689,7 +778,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         else:
             raise ValueError("At least one of region_A or region_B must be provided.")
 
-        # Helper function
+        # Internal helper to draw slits and targets on a given axis
         def plot_region(ax, region, color, side_label):
             num_targets = len(region[0])
             label = f" N = {num_targets}"
@@ -718,6 +807,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             ax.grid(True)
             ax.legend()
 
+        # Plot based on detector selection
         if det == 'both':
             plot_region(axA, region_1, color="red", side_label="1")
             plot_region(axB, region_2, color="green", side_label="2")
@@ -728,16 +818,17 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         elif det == 2:
             plot_region(axB, region_2, color="green", side_label="2")
 
+        # Display the final plot
         plt.tight_layout()
         plt.show()
 
+        # Return the plotted region data for potential further use
         if det == 'both':
             return region_1, region_2
         elif det == 1:
             return region_1
         elif det == 2:
             return region_2
-
 
 
 def binospec_read_amp(inp, ext):
