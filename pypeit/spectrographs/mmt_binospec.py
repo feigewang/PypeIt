@@ -19,6 +19,9 @@ from astropy.coordinates import SkyCoord
 from astropy import units
 from pypeit.spectrographs.slitmask import SlitMask
 
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
 
 class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
     """
@@ -574,6 +577,167 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         # Return, transposing array back to orient the overscan properly
         return detector_par, np.fliplr(np.flipud(array)), hdu, exptime, np.fliplr(np.flipud(rawdatasec_img)), \
                np.fliplr(np.flipud(oscansec_img))
+
+    def bino_get_slit_region_pix(self, filename, det, Nx=4096, Ny=4112, ratio=1.0, pady=0):
+
+        # Re-initiate slitmask
+        if filename is not None:
+            self.get_slitmask(filename, det)
+        else:
+            raise ValueError('The name of a science file should be provided')
+
+        if self.slitmask is None:
+            raise ValueError('Unable to read slitmask design info. Provide a file.')
+
+        hdu = fits.open(filename)
+
+        # Determine slit number
+        if det == 1:
+            mask_fits = hdu[9].data[0]
+        elif det == 2:
+            mask_fits = hdu[10].data[0]
+        else:
+            raise ValueError("Not a valid detector number. Try 1 or 2.")
+
+        numslits = len(self.slitmask.slitid)
+
+        # Output: 2 rows (min, max) x N slits --> placeholder for slit x/y ranges
+        res_x = np.zeros((2, numslits))
+        res_y = np.zeros((2, numslits))
+
+        # Object top and bottom distances from the slit edges
+        topdist = np.array(self.slitmask.objects[:, 7]).astype(float)
+        botdist = np.array(self.slitmask.objects[:, 8]).astype(float)
+        width = np.array(self.slitmask.width)
+
+        x_slits = np.array(self.slitmask.center[:, 0])
+        x_obj = x_slits
+
+        y_slits = -np.array(self.slitmask.center[:, 1])
+        y_slitsh = -np.array(self.slitmask.corners[:, 0, 1])
+        y_slitsl = -np.array(self.slitmask.corners[:, 2, 1])
+        y_obj = (y_slits + (topdist - botdist) / 2)
+        dx_slits = self.slitmask.length
+        dy_slits = width
+
+        #Constants
+        dy0 = -200.0
+        y_scl = 24.555832 if det == 1 else 24.548194
+
+        #Pull mask corners
+        mask_corners = np.array(mask_fits['MASK_CORNERS'])
+
+        #Convert to pixel coordinates
+        x_slits_pix = (x_slits - mask_corners[0]) * y_scl + Nx / 2.0
+        x_slitobj_pix = (x_obj - mask_corners[0]) * y_scl + Nx / 2.0
+        y_slits_pix = Ny - 1 - ((y_slits - mask_corners[1]) * y_scl) + dy0
+        y_slitobj_pix = Ny - 1 - ((y_obj - mask_corners[1]) * y_scl) + dy0
+        y_slitsl_pix = Ny - 1 - ((y_slitsl - mask_corners[1]) * y_scl) + dy0
+        y_slitsh_pix = Ny - 1 - ((y_slitsh - mask_corners[1]) * y_scl) + dy0
+
+        #Flip limits if needed
+        if y_slitsh_pix[0] < y_slitsl_pix[0]:
+            y_slitsh_pix, y_slitsl_pix = y_slitsl_pix.copy(), y_slitsh_pix.copy()
+
+        #Pixel sizes
+        dx_slits_pix = dx_slits * y_scl * ratio
+        dy_slits_pix = dy_slits * y_scl * ratio
+
+
+        #Loop through slits to append x/y ranges to res_x/res_y
+        for i in range(numslits):
+            xmin = round(x_slits_pix[i] - dx_slits_pix[i] / 2.0 - pady)
+            xmax = round(x_slits_pix[i] + dx_slits_pix[i] / 2.0 - 1 + pady)
+            xmin = max(0, xmin)
+            xmax = min(Ny - 1, xmax)
+
+            res_x[0, i] = xmin
+            res_x[1, i] = xmax
+
+            ymin = round(y_slits_pix[i] - dy_slits_pix[i] / 2.0 - pady)
+            ymax = round(y_slits_pix[i] + dy_slits_pix[i] / 2.0 - 1 + pady)
+            ymin = max(0, ymin)
+            ymax = min(Ny - 1, ymax)
+
+            res_y[0, i] = ymin
+            res_y[1, i] = ymax
+
+        #Transpose to (2, N)
+        slit_x_range, slit_y_range = res_x.T, res_y.T
+
+        region = [slit_x_range, slit_y_range, x_slitobj_pix, y_slitobj_pix]
+
+        return region, self.slitmask
+
+    def plot_mask(self, filename, det):
+
+        plt.rcParams.update({"font.size": 20})
+
+        if det == 'both':
+            fig, (axA, axB) = plt.subplots(ncols=2, figsize=(16, 16))
+            region_1 = self.bino_get_slit_region_pix(filename, 1)[0]
+            region_2 = self.bino_get_slit_region_pix(filename, 2)[0]
+
+        elif det == 1:
+            fig, axA = plt.subplots(figsize=(8, 8))
+            region_1 = self.bino_get_slit_region_pix(filename, 1)[0]
+
+        elif det == 2:
+            fig, axB = plt.subplots(figsize=(8, 8))
+            region_2 = self.bino_get_slit_region_pix(filename, 2)[0]
+
+        else:
+            raise ValueError("At least one of region_A or region_B must be provided.")
+
+        # Helper function
+        def plot_region(ax, region, color, side_label):
+            num_targets = len(region[0])
+            label = f" N = {num_targets}"
+
+            for i in range(len(region[0])):
+                slit_x_range = region[0][i]
+                slit_y_range = region[1][i]
+                width = slit_x_range[1] - slit_x_range[0]
+                height = slit_y_range[1] - slit_y_range[0]
+
+                rect = patches.Rectangle(
+                    (slit_x_range[0], slit_y_range[0]),
+                    width,
+                    height,
+                    linewidth=1,
+                    edgecolor="blue",
+                    facecolor="none"
+                )
+                ax.add_patch(rect)
+
+            ax.scatter(region[2], region[3], s=10, color=color, label=label)
+            ax.set_xlabel("X")
+            ax.set_ylabel("Y")
+            ax.set_title(f"Detector {side_label}")
+            ax.set_aspect("equal")
+            ax.grid(True)
+            ax.legend()
+
+        if det == 'both':
+            plot_region(axA, region_1, color="red", side_label="1")
+            plot_region(axB, region_2, color="green", side_label="2")
+
+        elif det == 1:
+            plot_region(axA, region_1, color="red", side_label="1")
+
+        elif det == 2:
+            plot_region(axB, region_2, color="green", side_label="2")
+
+        plt.tight_layout()
+        plt.show()
+
+        if det == 'both':
+            return region_1, region_2
+        elif det == 1:
+            return region_1
+        elif det == 2:
+            return region_2
+
 
 
 def binospec_read_amp(inp, ext):
