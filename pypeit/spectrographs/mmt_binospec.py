@@ -349,6 +349,115 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         msgs.warn('Cannot determine if frames are of type {0}.'.format(ftype))
         return np.zeros(len(fitstbl), dtype=bool)
 
+    def get_slitmask(self, filename, det):
+
+        #Open file
+        hdu = fits.open(filename)
+
+         #Determine slit number
+         if det == 1:
+            mask_fits = hdu[9].data[0]
+
+        elif det == 2:
+            mask_fits = hdu[10].data[0]
+
+        else:
+            raise ValueError("Not a valid detector number. Try 1 or 2.")
+
+
+
+        # Target data
+        target_type = mask_fits['TARGET_TYPE']
+        targ = np.where(target_type == 'TARGET')[0]
+        numslits = mask_fits['NTARGETS']
+
+        # X/Y coordinates of targets and slits (arcsec)
+        slit_mean_x = np.mean(mask_fits['POLY_X'], axis=0)[targ]
+        slit_mean_y = np.mean(mask_fits['POLY_Y'], axis=0)[targ]
+        x_targ = mask_fits['SLITX'][targ]
+        y_targ = mask_fits['SLITY'][targ]
+
+        delta_x = x_targ - slit_mean_x
+        delta_y = y_targ - slit_mean_y
+
+        slit_length_half = mask_fits['SLIT_LENGTH'][targ] / 2.
+
+        # Projected distance (in arcsec) of the object from the left and right (top and bot) edges of the slit
+        topdist = np.round(slit_length_half - delta_y, 3)
+        botdist = np.round(slit_length_half + delta_y, 3)
+
+        # Coordinates
+        obj_ra = mask_fits['RA'][targ]
+        obj_dec = mask_fits['DEC'][targ]
+
+
+        objname = mask_fits['TARGET_NAME'][targ]
+        objid = mask_fits['TARGET_ID'][targ]
+
+
+        #   - Pull out the slit ID, object ID, name, object coordinates, top and bottom distance
+        objects = np.array([np.array(mask_fits['SLIT_ID'][targ], dtype=int),
+                            objid,
+                            obj_ra,
+                            obj_dec,
+                            objname,
+                            np.array(mask_fits['MAG'][targ], dtype=float),
+                            ['None'] * mask_fits['SLIT_ID'][targ].size,  # no magnitude band
+                            topdist,
+                            botdist]).T
+
+        # Mask pointing
+        mask_coord = SkyCoord(mask_fits['CENTERRA'], mask_fits['CENTERDEC'],
+                              unit=('hourangle', 'deg'))
+
+        # PA corresponding to positive x on detector (spatial)
+        # Still unsure of which one is correct for MMT/Binospec
+        posx_pa = hdu[1].header['POSANG'] - 180
+        # posx_pa = hdu[1].header['POSANG']
+
+        if posx_pa < 0:
+            posx_pa += 360.
+
+        # Np.zeros serves as placeholder for potential slit tilt array
+        slit_pas = posx_pa + np.zeros(numslits)
+        off_signs = np.ones_like(slit_pas)
+        negy = delta_y < 0.
+        off_signs[negy] = -1.
+
+        # Convert Slit X/Y to RA/DEC
+        obj_coord = SkyCoord(ra=obj_ra, dec=obj_dec, unit='deg')
+        offsets = np.sqrt(delta_x ** 2 + delta_y ** 2)  # Distance from target to slit center
+
+        slit_ra, slit_dec = [], []
+        for offset, coord, slit_pa, off_sign in zip(offsets, obj_coord, slit_pas, off_signs):
+            slit_coord = coord.directional_offset_by(
+                slit_pa * units.deg, off_sign * offset * units.arcsec)
+            slit_ra.append(slit_coord.ra.deg)
+            slit_dec.append(slit_coord.dec.deg)
+
+        # Pull out corner data
+        poly_x_T = np.squeeze(mask_fits['POLY_X'].T)[targ]
+        poly_y_T = np.squeeze(mask_fits['POLY_Y'].T)[targ]
+        corners = np.stack((poly_x_T, poly_y_T), axis=-1)
+        corners = corners[:, [3, 0, 1, 2], :]
+
+        # Instantiate the slit mask object and return it
+        self.slitmask = SlitMask(
+            np.array(corners),
+            slitid=np.array(mask_fits['SLIT_ID'][targ], dtype=int),
+            onsky=np.array([
+                slit_ra, slit_dec,
+                np.array(mask_fits['SLIT_LENGTH'][targ], dtype=float),
+                np.array(mask_fits['SLIT_WIDTH'][targ], dtype=float),
+                slit_pas]).T,
+            objects=objects,
+            mask_radec=(mask_coord.ra.deg, mask_coord.dec.deg),
+            posx_pa=posx_pa
+        )
+
+        return self.slitmask
+
+
     def get_rawimage(self, raw_file, det):
         """
         Read raw images and generate a few other bits and pieces
