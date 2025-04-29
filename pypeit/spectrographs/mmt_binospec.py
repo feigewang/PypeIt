@@ -14,6 +14,11 @@ from pypeit.spectrographs import spectrograph
 from pypeit.core import parse
 from pypeit.images import detector_container
 
+from astropy.io import fits
+from astropy.coordinates import SkyCoord
+from astropy import units
+from pypeit.spectrographs.slitmask import SlitMask
+
 
 class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
     """
@@ -355,7 +360,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         hdu = fits.open(filename)
 
          #Determine slit number
-         if det == 1:
+        if det == 1:
             mask_fits = hdu[9].data[0]
 
         elif det == 2:
