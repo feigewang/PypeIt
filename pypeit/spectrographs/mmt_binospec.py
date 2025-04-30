@@ -4,6 +4,7 @@ Module for MMT/BINOSPEC specific methods.
 .. include:: ../include/links.rst
 """
 import numpy as np
+import os
 
 from pypeit import msgs
 from pypeit import telescopes
@@ -21,6 +22,7 @@ from pypeit.spectrographs.slitmask import SlitMask
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+
 
 
 class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
@@ -725,8 +727,14 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
         return region, self.slitmask
 
+    import os
 
-    def plot_mask(self, filename, det):
+    import os
+    from astropy.io import fits
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as patches
+
+    def plot_mask(self, filename, det, save_dir=None):
         """
         Plot the slit mask layout and target positions for one or both detectors.
 
@@ -741,6 +749,8 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             Path to the mask design file (e.g., a JSON file containing slit definitions).
         det : :obj:`int` or :obj:`str`
             Specifies which detector(s) to plot. Accepts 1, 2, or 'both'.
+        save_dir : :obj:`str`, optional
+            If provided, the plot will be saved as a PNG in the given directory.
 
         Returns
         -------
@@ -748,17 +758,14 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             Slit region and target position data for detector 1, if requested.
         region_2 : :obj:`tuple`, optional
             Slit region and target position data for detector 2, if requested.
-
-        Notes
-        -----
-        - Slit rectangles are drawn in blue; target positions are plotted in red
-          for detector 1 and green for detector 2.
-        - Assumes `bino_get_slit_region_pix` returns a 4-tuple with:
-            [x_ranges, y_ranges, x_targets, y_targets]
-        - Plots are displayed interactively using matplotlib.
         """
 
-        # Set font size for all plot elements
+        # Build save filename from FITS header
+        hdu = fits.open(filename)
+        basename = os.path.basename(filename)
+        name = f"plot_mask_{hdu[1].header['MASK']}_{basename}"
+        save_filename = os.path.splitext(name)[0] + ".png"
+
         plt.rcParams.update({"font.size": 20})
 
         # Load slit regions depending on the selected detector(s)
@@ -811,18 +818,23 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         if det == 'both':
             plot_region(axA, region_1, color="red", side_label="1")
             plot_region(axB, region_2, color="green", side_label="2")
-
         elif det == 1:
             plot_region(axA, region_1, color="red", side_label="1")
-
         elif det == 2:
             plot_region(axB, region_2, color="green", side_label="2")
 
-        # Display the final plot
-        plt.tight_layout()
-        plt.show()
+        # Save to file if directory provided
+        if save_dir is not None:
+            os.makedirs(save_dir, exist_ok=True)
+            save_path = os.path.join(save_dir, save_filename)
+            plt.tight_layout()
+            plt.savefig(save_path)
+            plt.close(fig)
+        else:
+            plt.tight_layout()
+            plt.show()
 
-        # Return the plotted region data for potential further use
+        # Return the plotted region data
         if det == 'both':
             return region_1, region_2
         elif det == 1:
