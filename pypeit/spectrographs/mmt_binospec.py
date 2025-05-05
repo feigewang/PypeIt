@@ -359,7 +359,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         msgs.warn('Cannot determine if frames are of type {0}.'.format(ftype))
         return np.zeros(len(fitstbl), dtype=bool)
 
-    def get_slitmask(self, filename, det):
+    def get_slitmask(self, ccdnum=None, filename=None):
         """
         Parse Binospec slitmask file and construct a SlitMask object with target and slit metadata.
 
@@ -386,13 +386,20 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         - Slit corners and on-sky positions are stored for each target.
         """
 
+        if ccdnum is None:
+            raise ValueError("A valid detector number must be provided.")
+
+        if filename is None:
+            raise ValueError("A valid slitmask filename must be provided.")
+
+
         # Open the FITS file
         hdu = fits.open(filename)
 
         # Select appropriate extension for detector 1 or 2
-        if det == 1:
+        if ccdnum == 1:
             mask_fits = hdu[9].data[0]
-        elif det == 2:
+        elif ccdnum == 2:
             mask_fits = hdu[10].data[0]
         else:
             raise ValueError("Not a valid detector number. Try 1 or 2.")
@@ -616,7 +623,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         return region, self.slitmask
 
 
-    def get_maskdef_slitedges(self, filename, det):
+    def get_maskdef_slitedges(self, ccdnum=None, filename=None):
         """ Determine the slit edges from the mask file (modified for Binospec)
 
         Args:
@@ -627,11 +634,15 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             tuple: top_edges, bot_edges, sortindx, slitmask
         """
         # Parse and load slitmask design
+
+        if ccdnum is None:
+            raise ValueError("A valid detector number must be provided.")
+
         if filename is None:
             raise ValueError("A valid slitmask filename must be provided.")
 
         # Call bino_get_slit_region_pix to get slit region information
-        region, slitmask = self.bino_get_slit_region_pix(filename, det)
+        region, slitmask = self.bino_get_slit_region_pix(filename, ccdnum)
 
         # region contains: [slit_x_range, slit_y_range, x_slitobj_pix, y_slitobj_pix]
         slit_x_range, slit_y_range, x_slitobj_pix, y_slitobj_pix = region
