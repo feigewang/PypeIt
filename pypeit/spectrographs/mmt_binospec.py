@@ -482,118 +482,6 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
         return self.slitmask
 
-    def get_rawimage(self, raw_file, det):
-        """
-        Read raw images and generate a few other bits and pieces
-        that are key for image processing.
-
-        Parameters
-        ----------
-        raw_file : :obj:`str`
-            File to read
-        det : :obj:`int`
-            1-indexed detector to read
-
-        Returns
-        -------
-        detector_par : :class:`pypeit.images.detector_container.DetectorContainer`
-            Detector metadata parameters.
-        raw_img : `numpy.ndarray`_
-            Raw image for this detector.
-        hdu : `astropy.io.fits.HDUList`_
-            Opened fits file
-        exptime : :obj:`float`
-            Exposure time read from the file header
-        rawdatasec_img : `numpy.ndarray`_
-            Data (Science) section of the detector as provided by setting the
-            (1-indexed) number of the amplifier used to read each detector
-            pixel. Pixels unassociated with any amplifier are set to 0.
-        oscansec_img : `numpy.ndarray`_
-            Overscan section of the detector as provided by setting the
-            (1-indexed) number of the amplifier used to read each detector
-            pixel. Pixels unassociated with any amplifier are set to 0.
-        """
-        fil = utils.find_single_file(f'{raw_file}*', required=True)
-
-        # Read
-        msgs.info(f'Reading BINOSPEC file: {fil}')
-        hdu = io.fits_open(fil)
-        head1 = hdu[1].header
-
-        # TOdO Store these parameters in the DetectorPar.
-        # Number of amplifiers
-        detector_par = self.get_detector_par(det if det is not None else 1, hdu=hdu)
-        numamp = detector_par['numamplifiers']
-
-        # get the x and y binning factors...
-        binning = head1['CCDSUM']
-        xbin, ybin = [int(ibin) for ibin in binning.split(' ')]
-
-        # First read over the header info to determine the size of the output array...
-        datasec = head1['DATASEC']
-        x1, x2, y1, y2 = np.array(parse.load_sections(datasec, fmt_iraf=False)).flatten()
-        nxb = x1 - 1
-
-        # determine the output array size...
-        nx = (x2 - x1 + 1) * int(numamp/2) + nxb * int(numamp/2)
-        ny = (y2 - y1 + 1) * int(numamp/2)
-
-        #datasize = head1['DETSIZE']
-        #_, nx, _, ny = np.array(parse.load_sections(datasize, fmt_iraf=False)).flatten()
-
-        # allocate output array...
-        array = np.zeros((nx, ny))
-        rawdatasec_img = np.zeros_like(array, dtype=int)
-        oscansec_img = np.zeros_like(array, dtype=int)
-
-        if det == 1:  # A DETECTOR
-            order = range(1, 5, 1)
-        elif det == 2:  # B DETECTOR
-            order = range(5, 9, 1)
-
-        # insert extensions into calibration image...
-        for kk, jj in enumerate(order):
-            # grab complete extension...
-            data, overscan, datasec, biassec = binospec_read_amp(hdu, jj)
-
-            # insert components into output array...
-            inx = data.shape[0]
-            xs = inx * kk
-            xe = xs + inx
-
-            iny = data.shape[1]
-            ys = iny * kk
-            yn = ys + iny
-
-            b1, b2, b3, b4 = np.array(parse.load_sections(biassec, fmt_iraf=False)).flatten()
-
-            if kk == 0:
-                array[b2:inx+b2,:iny] = data #*1.028
-                rawdatasec_img[b2:inx+b2,:iny] = kk + 1
-                array[:b2,:iny] = overscan
-                oscansec_img[2:b2,:iny] = kk + 1
-            elif kk == 1:
-                array[b2+inx:2*inx+b2,:iny] = np.flipud(data) #* 1.115
-                rawdatasec_img[b2+inx:2*inx+b2:,:iny] = kk + 1
-                array[2*inx+b2:,:iny] = overscan
-                oscansec_img[2*inx+b2:,:iny] = kk + 1
-            elif kk == 2:
-                array[b2+inx:2*inx+b2,iny:] = np.fliplr(np.flipud(data)) #* 1.047
-                rawdatasec_img[b2+inx:2*inx+b2,iny:] = kk + 1
-                array[2*inx+b2:, iny:] = overscan
-                oscansec_img[2*inx+b2:, iny:] = kk + 1
-            elif kk == 3:
-                array[b2:inx+b2,iny:] = np.fliplr(data) #* 1.045
-                rawdatasec_img[b2:inx+b2,iny:] = kk + 1
-                array[:b2,iny:] = overscan
-                oscansec_img[2:b2,iny:] = kk + 1
-
-        # Need the exposure time
-        exptime = hdu[self.meta['exptime']['ext']].header[self.meta['exptime']['card']]
-        # Return, transposing array back to orient the overscan properly
-        return detector_par, np.fliplr(np.flipud(array)), hdu, exptime, np.fliplr(np.flipud(rawdatasec_img)), \
-               np.fliplr(np.flipud(oscansec_img))
-
     def bino_get_slit_region_pix(self, filename, det, Nx=4096, Ny=4112, ratio=1.0, pady=0):
         """
         Convert Binospec slitmask geometry into pixel-space slit regions on the detector.
@@ -727,12 +615,149 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
         return region, self.slitmask
 
-    import os
 
-    import os
-    from astropy.io import fits
-    import matplotlib.pyplot as plt
-    import matplotlib.patches as patches
+    def get_maskdef_slitedges(self, filename, det):
+        """ Determine the slit edges from the mask file (modified for Binospec)
+
+        Args:
+            filename (str): Path to the slitmask FITS file.
+            det (int): Detector number (1 or 2)..
+
+        Returns:
+            tuple: top_edges, bot_edges, sortindx, slitmask
+        """
+        # Parse and load slitmask design
+        if filename is None:
+            raise ValueError("A valid slitmask filename must be provided.")
+
+        # Call bino_get_slit_region_pix to get slit region information
+        region, slitmask = self.bino_get_slit_region_pix(filename, det)
+
+        # region contains: [slit_x_range, slit_y_range, x_slitobj_pix, y_slitobj_pix]
+        slit_x_range, slit_y_range, x_slitobj_pix, y_slitobj_pix = region
+
+        # Left and right edges are determined by the y-range (vertical boundaries)
+        bot_edges = slit_y_range[:, 0]  # Low y-values (lower edge)
+        top_edges = slit_y_range[:, 1]  # High y-values (upper edge)
+
+        # Sorting the slits by their bottom edge (y-coordinate) in the detector space
+        sortindx = np.argsort(bot_edges)
+
+        # Return the left and right edges along with sorted indices and the slitmask
+        return top_edges, bot_edges, sortindx, self.slitmask
+
+    def get_rawimage(self, raw_file, det):
+        """
+        Read raw images and generate a few other bits and pieces
+        that are key for image processing.
+
+        Parameters
+        ----------
+        raw_file : :obj:`str`
+            File to read
+        det : :obj:`int`
+            1-indexed detector to read
+
+        Returns
+        -------
+        detector_par : :class:`pypeit.images.detector_container.DetectorContainer`
+            Detector metadata parameters.
+        raw_img : `numpy.ndarray`_
+            Raw image for this detector.
+        hdu : `astropy.io.fits.HDUList`_
+            Opened fits file
+        exptime : :obj:`float`
+            Exposure time read from the file header
+        rawdatasec_img : `numpy.ndarray`_
+            Data (Science) section of the detector as provided by setting the
+            (1-indexed) number of the amplifier used to read each detector
+            pixel. Pixels unassociated with any amplifier are set to 0.
+        oscansec_img : `numpy.ndarray`_
+            Overscan section of the detector as provided by setting the
+            (1-indexed) number of the amplifier used to read each detector
+            pixel. Pixels unassociated with any amplifier are set to 0.
+        """
+        fil = utils.find_single_file(f'{raw_file}*', required=True)
+
+        # Read
+        msgs.info(f'Reading BINOSPEC file: {fil}')
+        hdu = io.fits_open(fil)
+        head1 = hdu[1].header
+
+        # TOdO Store these parameters in the DetectorPar.
+        # Number of amplifiers
+        detector_par = self.get_detector_par(det if det is not None else 1, hdu=hdu)
+        numamp = detector_par['numamplifiers']
+
+        # get the x and y binning factors...
+        binning = head1['CCDSUM']
+        xbin, ybin = [int(ibin) for ibin in binning.split(' ')]
+
+        # First read over the header info to determine the size of the output array...
+        datasec = head1['DATASEC']
+        x1, x2, y1, y2 = np.array(parse.load_sections(datasec, fmt_iraf=False)).flatten()
+        nxb = x1 - 1
+
+        # determine the output array size...
+        nx = (x2 - x1 + 1) * int(numamp/2) + nxb * int(numamp/2)
+        ny = (y2 - y1 + 1) * int(numamp/2)
+
+        #datasize = head1['DETSIZE']
+        #_, nx, _, ny = np.array(parse.load_sections(datasize, fmt_iraf=False)).flatten()
+
+        # allocate output array...
+        array = np.zeros((nx, ny))
+        rawdatasec_img = np.zeros_like(array, dtype=int)
+        oscansec_img = np.zeros_like(array, dtype=int)
+
+        if det == 1:  # A DETECTOR
+            order = range(1, 5, 1)
+        elif det == 2:  # B DETECTOR
+            order = range(5, 9, 1)
+
+        # insert extensions into calibration image...
+        for kk, jj in enumerate(order):
+            # grab complete extension...
+            data, overscan, datasec, biassec = binospec_read_amp(hdu, jj)
+
+            # insert components into output array...
+            inx = data.shape[0]
+            xs = inx * kk
+            xe = xs + inx
+
+            iny = data.shape[1]
+            ys = iny * kk
+            yn = ys + iny
+
+            b1, b2, b3, b4 = np.array(parse.load_sections(biassec, fmt_iraf=False)).flatten()
+
+            if kk == 0:
+                array[b2:inx+b2,:iny] = data #*1.028
+                rawdatasec_img[b2:inx+b2,:iny] = kk + 1
+                array[:b2,:iny] = overscan
+                oscansec_img[2:b2,:iny] = kk + 1
+            elif kk == 1:
+                array[b2+inx:2*inx+b2,:iny] = np.flipud(data) #* 1.115
+                rawdatasec_img[b2+inx:2*inx+b2:,:iny] = kk + 1
+                array[2*inx+b2:,:iny] = overscan
+                oscansec_img[2*inx+b2:,:iny] = kk + 1
+            elif kk == 2:
+                array[b2+inx:2*inx+b2,iny:] = np.fliplr(np.flipud(data)) #* 1.047
+                rawdatasec_img[b2+inx:2*inx+b2,iny:] = kk + 1
+                array[2*inx+b2:, iny:] = overscan
+                oscansec_img[2*inx+b2:, iny:] = kk + 1
+            elif kk == 3:
+                array[b2:inx+b2,iny:] = np.fliplr(data) #* 1.045
+                rawdatasec_img[b2:inx+b2,iny:] = kk + 1
+                array[:b2,iny:] = overscan
+                oscansec_img[2:b2,iny:] = kk + 1
+
+        # Need the exposure time
+        exptime = hdu[self.meta['exptime']['ext']].header[self.meta['exptime']['card']]
+        # Return, transposing array back to orient the overscan properly
+        return detector_par, np.fliplr(np.flipud(array)), hdu, exptime, np.fliplr(np.flipud(rawdatasec_img)), \
+               np.fliplr(np.flipud(oscansec_img))
+
 
     def plot_mask(self, filename, det, save_dir=None):
         """
@@ -783,7 +808,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             region_2 = self.bino_get_slit_region_pix(filename, 2)[0]
 
         else:
-            raise ValueError("At least one of region_A or region_B must be provided.")
+            raise ValueError("det must be 1, 2, or 'both'.")
 
         # Internal helper to draw slits and targets on a given axis
         def plot_region(ax, region, color, side_label):
