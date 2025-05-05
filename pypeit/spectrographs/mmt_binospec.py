@@ -359,7 +359,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         msgs.warn('Cannot determine if frames are of type {0}.'.format(ftype))
         return np.zeros(len(fitstbl), dtype=bool)
 
-    def get_slitmask(self, ccdnum=None, filename=None):
+    def get_slitmask(self, filename, ccdnum=None):
         """
         Parse Binospec slitmask file and construct a SlitMask object with target and slit metadata.
 
@@ -623,7 +623,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         return region, self.slitmask
 
 
-    def get_maskdef_slitedges(self, ccdnum=None, filename=None):
+    def get_maskdef_slitedges(self, ccdnum=None, filename=None, debug=None, trc_path=None, binning=None):
         """ Determine the slit edges from the mask file (modified for Binospec)
 
         Args:
