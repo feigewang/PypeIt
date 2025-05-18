@@ -263,7 +263,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         # Turn on the use of mask design
         import IPython;
         IPython.embed()
-        if ('Longslit' not in self.get_meta_value(headarr, 'MASK')):
+        if ('Longslit' not in self.get_meta_value(headarr, 'MASK', ignore_bad_header=True)):
             # TODO -- Move this parameter into SlitMaskPar??
             par['calibrations']['slitedges']['use_maskdesign'] = True
             # Since we use the slitmask info to find the alignment boxes, I don't need `minimum_slit_length_sci`
