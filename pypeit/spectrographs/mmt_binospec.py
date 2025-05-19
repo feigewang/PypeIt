@@ -260,6 +260,8 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             par['calibrations']['wavelengths']['reid_arxiv'] = 'mmt_binospec_1000.fits'
 
         headarr = self.get_headarr(scifile)
+        head = fits.getheader(scifile)
+
         # Turn on the use of mask design
         import IPython;
         IPython.embed()
