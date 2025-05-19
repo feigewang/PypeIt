@@ -260,11 +260,11 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             par['calibrations']['wavelengths']['reid_arxiv'] = 'mmt_binospec_1000.fits'
 
         headarr = self.get_headarr(scifile)
-        debug_param = self.get_meta_value(headarr, 'decker')
 
         # Turn on the use of mask design
-        import IPython;
-        IPython.embed()
+
+        #import IPython;
+        #IPython.embed()
         if ('Longslit' not in self.get_meta_value(headarr, 'decker')):
             # TODO -- Move this parameter into SlitMaskPar??
             par['calibrations']['slitedges']['use_maskdesign'] = True
