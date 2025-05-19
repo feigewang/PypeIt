@@ -100,7 +100,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         self.meta['ra'] = dict(ext=1, card='RA')
         self.meta['dec'] = dict(ext=1, card='DEC')
         self.meta['target'] = dict(ext=1, card='OBJECT')
-        self.meta['decker'] = dict(ext=1, card=None, default='default')
+        self.meta['decker'] = dict(ext=1, card='MASK', default='default')
         self.meta['dichroic'] = dict(ext=1, card=None, default='default')
         self.meta['binning'] = dict(ext=1, card='CCDSUM', compound=True)
 
@@ -260,12 +260,12 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             par['calibrations']['wavelengths']['reid_arxiv'] = 'mmt_binospec_1000.fits'
 
         headarr = self.get_headarr(scifile)
-        head = fits.getheader(scifile)
+        debug_param = self.get_meta_value(headarr, 'decker')
 
         # Turn on the use of mask design
         import IPython;
         IPython.embed()
-        if ('Longslit' not in self.get_meta_value(headarr, 'target')):
+        if ('Longslit' not in self.get_meta_value(headarr, 'decker')):
             # TODO -- Move this parameter into SlitMaskPar??
             par['calibrations']['slitedges']['use_maskdesign'] = True
             # Since we use the slitmask info to find the alignment boxes, I don't need `minimum_slit_length_sci`
