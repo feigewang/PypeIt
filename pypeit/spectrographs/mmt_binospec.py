@@ -260,110 +260,55 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             par['calibrations']['wavelengths']['reid_arxiv'] = 'mmt_binospec_1000.fits'
 
 
-        headarr = self.get_headarr(scifile) #Headers for main reduction
+        #headarr = self.get_headarr(scifile) #Headers for main reduction
 
-        header = fits.getheader(scifile) #Headers for coadd 2d
+        header0 = fits.getheader(scifile)
+        header1 = fits.getheader(scifile, 1)
+
+
+        #decker = self.get_meta_value(headarr, 'decker', ignore_bad_header=True)
+        #target = self.get_meta_value(headarr, 'target', ignore_bad_header=True)
+
+        if 'DECKER' in header0.keys():
+            decker = header0['DECKER']
+        elif 'MASK' in header1.keys():
+            decker = header1['MASK']
+        else:
+            decker = 'Longslit'
+            msgs.warn(f'DECKER/TARGET info was not '
+                      f'found in {scifile}. Using longslit setup.')
+
+
+        if 'Longslit' not in decker:
+
+            # Turn on the use of mask design
+
+            # TODO -- Move this parameter into SlitMaskPar??
+            par['calibrations']['slitedges']['use_maskdesign'] = True
+            # Since we use the slitmask info to find the alignment boxes, I don't need `minimum_slit_length_sci`
+            par['calibrations']['slitedges']['minimum_slit_length_sci'] = None
+            # Sometime the added missing slits at the edge of the detector are to small to be useful.
+            par['calibrations']['slitedges']['minimum_slit_length'] = 3.
+            # Since we use the slitmask info to add and remove traces, 'minimum_slit_gap' may undo the matching effort.
+            par['calibrations']['slitedges']['minimum_slit_gap'] = 0.
+            # Lower edge_thresh works better
+            par['calibrations']['slitedges']['edge_thresh'] = 10.
+            # use stars in alignment boxes to compute the slitmask offset (this works the best)
+            par['reduce']['slitmask']['use_alignbox'] = True
+            # Assign RA, DEC, OBJNAME to detected objects
+            par['reduce']['slitmask']['assign_obj'] = True
+            # force extraction of undetected objects
+            par['reduce']['slitmask']['extract_missing_objs'] = True
+            # lower tilts spat_order and higher spec_order for multislits (i.e., generally not very long slits)
+            par['calibrations']['tilts']['spat_order'] = 2  # Default: 3
+            par['calibrations']['tilts']['spec_order'] = 5  # Default: 4
+            # pca
+            par['calibrations']['slitedges']['sync_predict'] = 'auto'
+
+            # set offsets for coadd2d
+            par['coadd2d']['offsets'] = 'maskdef_offsets'
 
         import IPython;
-
-        # Turn on the use of mask design
-
-        decker = self.get_meta_value(headarr, 'decker', ignore_bad_header=True)
-        target = self.get_meta_value(headarr, 'target', ignore_bad_header=True)
-
-        if decker is not None:
-            #IPython.embed()
-
-            if 'Long' not in decker:
-                # TODO -- Move this parameter into SlitMaskPar??
-                par['calibrations']['slitedges']['use_maskdesign'] = True
-                # Since we use the slitmask info to find the alignment boxes, I don't need `minimum_slit_length_sci`
-                par['calibrations']['slitedges']['minimum_slit_length_sci'] = None
-                # Sometime the added missing slits at the edge of the detector are to small to be useful.
-                par['calibrations']['slitedges']['minimum_slit_length'] = 3.
-                # Since we use the slitmask info to add and remove traces, 'minimum_slit_gap' may undo the matching effort.
-                par['calibrations']['slitedges']['minimum_slit_gap'] = 0.
-                # Lower edge_thresh works better
-                par['calibrations']['slitedges']['edge_thresh'] = 10.
-                # use stars in alignment boxes to compute the slitmask offset (this works the best)
-                par['reduce']['slitmask']['use_alignbox'] = True
-                # Assign RA, DEC, OBJNAME to detected objects
-                par['reduce']['slitmask']['assign_obj'] = True
-                # force extraction of undetected objects
-                par['reduce']['slitmask']['extract_missing_objs'] = True
-                # lower tilts spat_order and higher spec_order for multislits (i.e., generally not very long slits)
-                par['calibrations']['tilts']['spat_order'] = 2  # Default: 3
-                par['calibrations']['tilts']['spec_order'] = 5  # Default: 4
-                # pca
-                par['calibrations']['slitedges']['sync_predict'] = 'auto'
-
-                # set offsets for coadd2d
-                par['coadd2d']['offsets'] = 'maskdef_offsets'
-
-        elif target is not None:
-            #IPython.embed()
-
-            if 'Long' not in target:
-                # TODO -- Move this parameter into SlitMaskPar??
-                par['calibrations']['slitedges']['use_maskdesign'] = True
-                # Since we use the slitmask info to find the alignment boxes, I don't need `minimum_slit_length_sci`
-                par['calibrations']['slitedges']['minimum_slit_length_sci'] = None
-                # Sometime the added missing slits at the edge of the detector are to small to be useful.
-                par['calibrations']['slitedges']['minimum_slit_length'] = 3.
-                # Since we use the slitmask info to add and remove traces, 'minimum_slit_gap' may undo the matching effort.
-                par['calibrations']['slitedges']['minimum_slit_gap'] = 0.
-                # Lower edge_thresh works better
-                par['calibrations']['slitedges']['edge_thresh'] = 10.
-                # use stars in alignment boxes to compute the slitmask offset (this works the best)
-                par['reduce']['slitmask']['use_alignbox'] = True
-                # Assign RA, DEC, OBJNAME to detected objects
-                par['reduce']['slitmask']['assign_obj'] = True
-                # force extraction of undetected objects
-                par['reduce']['slitmask']['extract_missing_objs'] = True
-                # lower tilts spat_order and higher spec_order for multislits (i.e., generally not very long slits)
-                par['calibrations']['tilts']['spat_order'] = 2  # Default: 3
-                par['calibrations']['tilts']['spec_order'] = 5  # Default: 4
-                # pca
-                par['calibrations']['slitedges']['sync_predict'] = 'auto'
-
-                # set offsets for coadd2d
-                par['coadd2d']['offsets'] = 'maskdef_offsets'
-
-        elif decker is None and target is None:
-
-            decker_coadd = header['decker']
-
-            if 'Long' not in decker_coadd:
-                # TODO -- Move this parameter into SlitMaskPar??
-                par['calibrations']['slitedges']['use_maskdesign'] = True
-                # Since we use the slitmask info to find the alignment boxes, I don't need `minimum_slit_length_sci`
-                par['calibrations']['slitedges']['minimum_slit_length_sci'] = None
-                # Sometime the added missing slits at the edge of the detector are to small to be useful.
-                par['calibrations']['slitedges']['minimum_slit_length'] = 3.
-                # Since we use the slitmask info to add and remove traces, 'minimum_slit_gap' may undo the matching effort.
-                par['calibrations']['slitedges']['minimum_slit_gap'] = 0.
-                # Lower edge_thresh works better
-                par['calibrations']['slitedges']['edge_thresh'] = 10.
-                # use stars in alignment boxes to compute the slitmask offset (this works the best)
-                par['reduce']['slitmask']['use_alignbox'] = True
-                # Assign RA, DEC, OBJNAME to detected objects
-                par['reduce']['slitmask']['assign_obj'] = True
-                # force extraction of undetected objects
-                par['reduce']['slitmask']['extract_missing_objs'] = True
-                # lower tilts spat_order and higher spec_order for multislits (i.e., generally not very long slits)
-                par['calibrations']['tilts']['spat_order'] = 2  # Default: 3
-                par['calibrations']['tilts']['spec_order'] = 5  # Default: 4
-                # pca
-                par['calibrations']['slitedges']['sync_predict'] = 'auto'
-
-                # set offsets for coadd2d
-                par['coadd2d']['offsets'] = 'maskdef_offsets'
-
-
-        else:
-            msgs.warn('DECKER/TARGET info was not found in {:}.using longslit setup'.format(scifile))
-            decker = 'Longslit'
-
         IPython.embed()
 
         return par
