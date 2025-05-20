@@ -362,7 +362,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             msgs.warn('DECKER/TARGET info was not found in {:}.using longslit setup'.format(scifile))
             decker = 'Longslit'
 
-        IPython.embed()
+        #IPython.embed()
 
         return par
 
