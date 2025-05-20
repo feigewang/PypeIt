@@ -279,6 +279,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
                       f'found in {scifile}. Using longslit setup.')
 
 
+
         if 'Longslit' not in decker:
 
             # Turn on the use of mask design
