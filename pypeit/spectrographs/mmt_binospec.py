@@ -260,14 +260,8 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             par['calibrations']['wavelengths']['reid_arxiv'] = 'mmt_binospec_1000.fits'
 
 
-        #headarr = self.get_headarr(scifile) #Headers for main reduction
-
         header0 = fits.getheader(scifile)
         header1 = fits.getheader(scifile, 1)
-
-
-        #decker = self.get_meta_value(headarr, 'decker', ignore_bad_header=True)
-        #target = self.get_meta_value(headarr, 'target', ignore_bad_header=True)
 
         if 'DECKER' in header0.keys():
             decker = header0['DECKER']
@@ -279,12 +273,9 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
                       f'found in {scifile}. Using longslit setup.')
 
 
-
         if 'Longslit' not in decker:
 
             # Turn on the use of mask design
-
-            # TODO -- Move this parameter into SlitMaskPar??
             par['calibrations']['slitedges']['use_maskdesign'] = True
             # Since we use the slitmask info to find the alignment boxes, I don't need `minimum_slit_length_sci`
             par['calibrations']['slitedges']['minimum_slit_length_sci'] = None
@@ -309,8 +300,6 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             # set offsets for coadd2d
             par['coadd2d']['offsets'] = 'maskdef_offsets'
 
-        import IPython;
-        IPython.embed()
 
         return par
 
