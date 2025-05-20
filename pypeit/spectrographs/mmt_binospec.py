@@ -263,6 +263,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         header = fits.getheader(scifile)
         keys = header.keys
 
+        import IPython;
         IPython.embed()
 
         # Turn on the use of mask design
