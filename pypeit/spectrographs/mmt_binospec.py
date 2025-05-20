@@ -100,7 +100,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         self.meta['ra'] = dict(ext=1, card='RA')
         self.meta['dec'] = dict(ext=1, card='DEC')
         self.meta['target'] = dict(ext=1, card='OBJECT')
-        self.meta['decker'] = dict(ext=1, card='MASK', default='default')
+        self.meta['decker'] = dict(ext=1, card='MASK')
         self.meta['dichroic'] = dict(ext=1, card=None, default='default')
         self.meta['binning'] = dict(ext=1, card='CCDSUM', compound=True)
 
