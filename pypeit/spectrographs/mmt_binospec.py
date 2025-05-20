@@ -268,7 +268,6 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
 
         if 'DECKER' in header:
-            #print('Entered decker if statement')
             #IPython.embed()
 
             if ('Longslit' not in header['decker']):
@@ -332,7 +331,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             decker = 'Longslit'
 
 
-
+        IPython.embed()
         return par
 
     def update_edgetracepar(self, par):
