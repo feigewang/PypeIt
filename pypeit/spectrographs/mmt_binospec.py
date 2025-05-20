@@ -260,7 +260,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             par['calibrations']['wavelengths']['reid_arxiv'] = 'mmt_binospec_1000.fits'
 
         headarr = self.get_headarr(scifile)
-        #header = fits.getheader(scifile)
+        header = fits.getheader(scifile)
 
         import IPython;
 
@@ -298,10 +298,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
                 # set offsets for coadd2d
                 par['coadd2d']['offsets'] = 'maskdef_offsets'
 
-
-
         elif target is not None:
-            #print('Entered MASK if statement')
             #IPython.embed()
 
             if 'Long' not in target:
@@ -329,6 +326,37 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
                 # set offsets for coadd2d
                 par['coadd2d']['offsets'] = 'maskdef_offsets'
+
+        elif decker is None and target is None:
+
+            decker_coadd = header['decker']
+
+            if 'Long' not in decker_coadd:
+                # TODO -- Move this parameter into SlitMaskPar??
+                par['calibrations']['slitedges']['use_maskdesign'] = True
+                # Since we use the slitmask info to find the alignment boxes, I don't need `minimum_slit_length_sci`
+                par['calibrations']['slitedges']['minimum_slit_length_sci'] = None
+                # Sometime the added missing slits at the edge of the detector are to small to be useful.
+                par['calibrations']['slitedges']['minimum_slit_length'] = 3.
+                # Since we use the slitmask info to add and remove traces, 'minimum_slit_gap' may undo the matching effort.
+                par['calibrations']['slitedges']['minimum_slit_gap'] = 0.
+                # Lower edge_thresh works better
+                par['calibrations']['slitedges']['edge_thresh'] = 10.
+                # use stars in alignment boxes to compute the slitmask offset (this works the best)
+                par['reduce']['slitmask']['use_alignbox'] = True
+                # Assign RA, DEC, OBJNAME to detected objects
+                par['reduce']['slitmask']['assign_obj'] = True
+                # force extraction of undetected objects
+                par['reduce']['slitmask']['extract_missing_objs'] = True
+                # lower tilts spat_order and higher spec_order for multislits (i.e., generally not very long slits)
+                par['calibrations']['tilts']['spat_order'] = 2  # Default: 3
+                par['calibrations']['tilts']['spec_order'] = 5  # Default: 4
+                # pca
+                par['calibrations']['slitedges']['sync_predict'] = 'auto'
+
+                # set offsets for coadd2d
+                par['coadd2d']['offsets'] = 'maskdef_offsets'
+
 
         else:
             msgs.warn('DECKER/TARGET info was not found in {:}.using longslit setup'.format(scifile))
