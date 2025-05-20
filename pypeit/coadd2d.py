@@ -1134,7 +1134,7 @@ class CoAdd2D:
             if self.maskdef_offset is not None:
                 # the offsets computed during the main reduction (`run_pypeit`) are used
                 msgs.info('Determining offsets using maskdef_offset recoded in SlitTraceSet')
-                import IPython; IPython.embed()  # <<< Drop into interactive mode here
+                #import IPython; IPython.embed()  # <<< Drop into interactive mode here
                 self.offsets = self.maskdef_offset[0] - self.maskdef_offset
                 self.offsets_report(self.offsets, pixscale, 'maskdef_offset')
             else:
