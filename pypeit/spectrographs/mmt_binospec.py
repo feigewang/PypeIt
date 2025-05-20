@@ -330,8 +330,9 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             msgs.warn('DECKER/MASK info was not found in {:}.using longslit setup'.format(scifile))
             decker = 'Longslit'
 
-
         IPython.embed()
+
+
         return par
 
     def update_edgetracepar(self, par):
