@@ -259,18 +259,20 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         if grating == 'x1000':
             par['calibrations']['wavelengths']['reid_arxiv'] = 'mmt_binospec_1000.fits'
 
-        #headarr = self.get_headarr(scifile)
-        header = fits.getheader(scifile)
+        headarr = self.get_headarr(scifile)
+        #header = fits.getheader(scifile)
 
         import IPython;
 
         # Turn on the use of mask design
 
+        decker = self.get_meta_value(headarr, 'decker', ignore_bad_header=True)
+        target = self.get_meta_value(headarr, 'target', ignore_bad_header=True)
 
-        if 'DECKER' in header:
+        if decker is not None:
             #IPython.embed()
 
-            if ('Longslit' not in header['decker']):
+            if 'Long' not in decker:
                 # TODO -- Move this parameter into SlitMaskPar??
                 par['calibrations']['slitedges']['use_maskdesign'] = True
                 # Since we use the slitmask info to find the alignment boxes, I don't need `minimum_slit_length_sci`
@@ -296,11 +298,13 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
                 # set offsets for coadd2d
                 par['coadd2d']['offsets'] = 'maskdef_offsets'
 
-        elif 'MASK' in header:
+
+
+        elif target is not None:
             #print('Entered MASK if statement')
             #IPython.embed()
 
-            if ('Longslit' not in header['MASK']):
+            if 'Long' not in target:
                 # TODO -- Move this parameter into SlitMaskPar??
                 par['calibrations']['slitedges']['use_maskdesign'] = True
                 # Since we use the slitmask info to find the alignment boxes, I don't need `minimum_slit_length_sci`
@@ -327,11 +331,10 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
                 par['coadd2d']['offsets'] = 'maskdef_offsets'
 
         else:
-            msgs.warn('DECKER/MASK info was not found in {:}.using longslit setup'.format(scifile))
+            msgs.warn('DECKER/TARGET info was not found in {:}.using longslit setup'.format(scifile))
             decker = 'Longslit'
 
         IPython.embed()
-
 
         return par
 
