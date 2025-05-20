@@ -261,14 +261,17 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
         #headarr = self.get_headarr(scifile)
         header = fits.getheader(scifile)
+        keys = header.keys
+
+        IPython.embed()
 
         # Turn on the use of mask design
 
 
         if 'decker' in header.keys:
             debug = 'Entered decker if statement'
-            import IPython;
-            IPython.embed()
+            #import IPython;
+            #IPython.embed()
 
             if ('Longslit' not in header['decker']):
                 # TODO -- Move this parameter into SlitMaskPar??
@@ -298,7 +301,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
         elif 'MASK' in header.keys:
             debug = 'Entered MASK if statement'
-            IPython.embed()
+            #IPython.embed()
 
             if ('Longslit' not in header['MASK']):
                 # TODO -- Move this parameter into SlitMaskPar??
