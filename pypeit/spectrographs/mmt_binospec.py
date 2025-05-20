@@ -259,8 +259,10 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         if grating == 'x1000':
             par['calibrations']['wavelengths']['reid_arxiv'] = 'mmt_binospec_1000.fits'
 
-        headarr = self.get_headarr(scifile)
-        header = fits.getheader(scifile)
+
+        headarr = self.get_headarr(scifile) #Headers for main reduction
+
+        header = fits.getheader(scifile) #Headers for coadd 2d
 
         import IPython;
 
@@ -362,7 +364,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             msgs.warn('DECKER/TARGET info was not found in {:}.using longslit setup'.format(scifile))
             decker = 'Longslit'
 
-        #IPython.embed()
+        IPython.embed()
 
         return par
 
