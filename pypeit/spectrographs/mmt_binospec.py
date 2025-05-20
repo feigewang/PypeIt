@@ -268,8 +268,8 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
 
         if 'DECKER' in header:
-            print('Entered decker if statement')
-            IPython.embed()
+            #print('Entered decker if statement')
+            #IPython.embed()
 
             if ('Longslit' not in header['decker']):
                 # TODO -- Move this parameter into SlitMaskPar??
@@ -298,8 +298,8 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
                 par['coadd2d']['offsets'] = 'maskdef_offsets'
 
         elif 'MASK' in header:
-            print('Entered MASK if statement')
-            IPython.embed()
+            #print('Entered MASK if statement')
+            #IPython.embed()
 
             if ('Longslit' not in header['MASK']):
                 # TODO -- Move this parameter into SlitMaskPar??
