@@ -454,7 +454,6 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         if filename is None:
             raise ValueError("A valid slitmask filename must be provided.")
 
-
         # Open the FITS file
         hdu = fits.open(filename)
 
