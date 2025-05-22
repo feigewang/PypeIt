@@ -551,7 +551,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
         return self.slitmask
 
-    def bino_get_slit_region_pix(self, filename, det, Nx=4096, Ny=4112, ratio=1.0, pady=0):
+    def bino_get_slit_region(self, filename, ccdnum=None, Nx=4096, Ny=4112, ratio=1.0, pady=0):
         """
         Convert Binospec slitmask geometry into pixel-space slit regions on the detector.
 
@@ -597,9 +597,12 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         - Slit tilt and rotation are not explicitly handled (slits assumed rectangular).
         """
 
+        if ccdnum is None:
+            raise ValueError("A valid detector number must be provided.")
+
         # Re-initiate slitmask from file
         if filename is not None:
-            self.get_slitmask(filename, det)
+            self.get_slitmask(filename, ccdnum)
         else:
             raise ValueError('The name of a science file should be provided')
 
@@ -609,9 +612,9 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         hdu = fits.open(filename)
 
         # Read mask data for correct detector
-        if det == 1:
+        if ccdnum == 1:
             mask_fits = hdu[9].data[0]
-        elif det == 2:
+        elif ccdnum == 2:
             mask_fits = hdu[10].data[0]
         else:
             raise ValueError("Not a valid detector number. Try 1 or 2.")
@@ -704,7 +707,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             raise ValueError("A valid slitmask filename must be provided.")
 
         # Call bino_get_slit_region_pix to get slit region information
-        region, slitmask = self.bino_get_slit_region_pix(filename, ccdnum)
+        region, slitmask = self.bino_get_slit_region(filename, ccdnum)
 
         # region contains: [slit_x_range, slit_y_range, x_slitobj_pix, y_slitobj_pix]
         slit_x_range, slit_y_range, x_slitobj_pix, y_slitobj_pix = region
@@ -832,7 +835,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
                np.fliplr(np.flipud(oscansec_img))
 
 
-    def plot_mask(self, filename, det, save_dir=None):
+    def plot_mask(self, filename, ccdnum=None, save_dir=None):
         """
         Plot the slit mask layout and target positions for one or both detectors.
 
@@ -858,6 +861,12 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             Slit region and target position data for detector 2, if requested.
         """
 
+        if ccdnum is None:
+            raise ValueError("A valid detector number must be provided: 1, 2, or 'both'")
+
+        if filename is None:
+            raise ValueError("A valid filename must be provided.")
+
         # Build save filename from FITS header
         hdu = fits.open(filename)
         basename = os.path.basename(filename)
@@ -867,18 +876,18 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         plt.rcParams.update({"font.size": 20})
 
         # Load slit regions depending on the selected detector(s)
-        if det == 'both':
+        if ccdnum == 'both':
             fig, (axA, axB) = plt.subplots(ncols=2, figsize=(16, 16))
-            region_1 = self.bino_get_slit_region_pix(filename, 1)[0]
-            region_2 = self.bino_get_slit_region_pix(filename, 2)[0]
+            region_1 = self.bino_get_slit_region(filename, 1)[0]
+            region_2 = self.bino_get_slit_region(filename, 2)[0]
 
-        elif det == 1:
+        elif ccdnum == 1:
             fig, axA = plt.subplots(figsize=(8, 8))
-            region_1 = self.bino_get_slit_region_pix(filename, 1)[0]
+            region_1 = self.bino_get_slit_region(filename, 1)[0]
 
-        elif det == 2:
+        elif ccdnum == 2:
             fig, axB = plt.subplots(figsize=(8, 8))
-            region_2 = self.bino_get_slit_region_pix(filename, 2)[0]
+            region_2 = self.bino_get_slit_region(filename, 2)[0]
 
         else:
             raise ValueError("det must be 1, 2, or 'both'.")
@@ -913,12 +922,12 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             ax.legend()
 
         # Plot based on detector selection
-        if det == 'both':
+        if ccdnum == 'both':
             plot_region(axA, region_1, color="red", side_label="1")
             plot_region(axB, region_2, color="green", side_label="2")
-        elif det == 1:
+        elif ccdnum == 1:
             plot_region(axA, region_1, color="red", side_label="1")
-        elif det == 2:
+        elif ccdnum == 2:
             plot_region(axB, region_2, color="green", side_label="2")
 
         # Save to file if directory provided
