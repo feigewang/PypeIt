@@ -643,7 +643,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
         # Constants for conversion to pixel space
         dy0 = -200.0
-        y_scl = 24.555832 if det == 1 else 24.548194  # arcsec to pixel scale
+        y_scl = 24.555832 if ccdnum == 1 else 24.548194  # arcsec to pixel scale
 
         # Mask center reference point
         mask_corners = np.array(mask_fits['MASK_CORNERS'])
