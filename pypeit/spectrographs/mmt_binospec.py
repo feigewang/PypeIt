@@ -269,7 +269,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         if 'spec2d' in scifile:
             decker = headarr[0]['TARGET']
 
-        elif:
+        elif 'spec2d' not in scifile:
             decker = headarr[1]['MASK']
 
         else:
