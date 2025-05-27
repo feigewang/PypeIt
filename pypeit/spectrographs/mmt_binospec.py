@@ -101,12 +101,15 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         # Required (core)
         self.meta['ra'] = dict(ext=1, card='RA')
         self.meta['dec'] = dict(ext=1, card='DEC')
+
+        if 'spec2d' in scifile:
+            self.meta['decker'] = dict(ext=1, card='TARGET')
+        else:
+            self.meta['decker'] = dict(ext=1, card='MASK')
+
         self.meta['target'] = dict(ext=1, card='OBJECT')
-        self.meta['decker'] = dict(ext=1, card='MASK')
         self.meta['dichroic'] = dict(ext=1, card=None, default='default')
         self.meta['binning'] = dict(ext=1, card='CCDSUM', compound=True)
-
-
         self.meta['mjd'] = dict(ext=1, card='MJD')
         self.meta['exptime'] = dict(ext=1, card='EXPTIME')
         self.meta['airmass'] = dict(ext=1, card='AIRMASS')
