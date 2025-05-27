@@ -260,7 +260,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
         elif 'spec2d' not in scifile:
             decker = headarr[1]['MASK']
-            headarr[1]['DISPERS1']
+            grating = headarr[1]['DISPERS1']
 
         # grating = self.get_meta_value(scifile, 'dispname')
         if grating == 'x270':
