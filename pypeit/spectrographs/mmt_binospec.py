@@ -277,22 +277,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
                       'Assuming longslit setup.')
             decker = 'Longslit'
 
-        header0 = fits.getheader(scifile)
-        header1 = fits.getheader(scifile, 1)
-
         #decker = self.get_meta_value(headarr, 'decker')
-
-        embed()
-
-
-        #if 'DECKER' in header0.keys():
-            #decker = header0['DECKER']
-        #elif 'MASK' in header1.keys():
-            #decker = header1['MASK']
-        #else:
-            #decker = 'Longslit'
-            #msgs.warn(f'DECKER/TARGET info was not '
-                      #f'found in {scifile}. Using longslit setup.')
 
 
         if 'Longslit' not in decker:
