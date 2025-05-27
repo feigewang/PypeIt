@@ -265,7 +265,6 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         if 'spec2d' in scifile:
             self.meta['decker'] = dict(ext=1, card='TARGET')
 
-
         header0 = fits.getheader(scifile)
         header1 = fits.getheader(scifile, 1)
 
