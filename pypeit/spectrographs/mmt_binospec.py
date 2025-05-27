@@ -251,18 +251,16 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         """
         par = super().config_specific_par(scifile, inp_par=inp_par)
 
-
         headarr = self.get_headarr(scifile)
 
         if 'spec2d' in scifile:
             decker = headarr[0]['DECKER']
             grating = headarr[0]['DISPNAME']
-
         else:
             decker = headarr[1]['MASK']
             grating = headarr[1]['DISPERS1']
 
-        # grating = self.get_meta_value(scifile, 'dispname')
+
         if grating == 'x270':
             par['calibrations']['wavelengths']['reid_arxiv'] = 'mmt_binospec_270.fits'
 
@@ -271,9 +269,6 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
         if grating == 'x1000':
             par['calibrations']['wavelengths']['reid_arxiv'] = 'mmt_binospec_1000.fits'
-
-
-        #decker = self.get_meta_value(headarr, 'decker')
 
 
         if 'Longslit' not in decker:
@@ -302,8 +297,6 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
             # set offsets for coadd2d
             par['coadd2d']['offsets'] = 'maskdef_offsets'
-
-            embed()
 
 
         return par
