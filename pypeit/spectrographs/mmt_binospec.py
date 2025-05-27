@@ -263,6 +263,12 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         header0 = fits.getheader(scifile)
         header1 = fits.getheader(scifile, 1)
 
+        headarr = self.get_headarr(scifile)
+        decker = self.get_meta_value(headarr, 'decker')
+
+        embed()
+
+
         if 'DECKER' in header0.keys():
             decker = header0['DECKER']
         elif 'MASK' in header1.keys():
