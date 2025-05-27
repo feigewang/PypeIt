@@ -251,8 +251,18 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         """
         par = super().config_specific_par(scifile, inp_par=inp_par)
 
-        grating = self.get_meta_value(scifile, 'dispname')
 
+        headarr = self.get_headarr(scifile)
+
+        if 'spec2d' in scifile:
+            decker = headarr[0]['TARGET']
+            grating = headarr[0]['DISPNAME']
+
+        elif 'spec2d' not in scifile:
+            decker = headarr[1]['MASK']
+            headarr[1]['DISPERS1']
+
+        # grating = self.get_meta_value(scifile, 'dispname')
         if grating == 'x270':
             par['calibrations']['wavelengths']['reid_arxiv'] = 'mmt_binospec_270.fits'
 
@@ -264,18 +274,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
 
 
-        headarr = self.get_headarr(scifile)
 
-        if 'spec2d' in scifile:
-            decker = headarr[0]['TARGET']
-
-        elif 'spec2d' not in scifile:
-            decker = headarr[1]['MASK']
-
-        else:
-            msgs.warn('Could not find decker information in file header. '
-                      'Assuming longslit setup.')
-            decker = 'Longslit'
 
         #decker = self.get_meta_value(headarr, 'decker')
 
