@@ -255,10 +255,10 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         headarr = self.get_headarr(scifile)
 
         if 'spec2d' in scifile:
-            decker = headarr[0]['TARGET']
+            decker = headarr[0]['DECKER']
             grating = headarr[0]['DISPNAME']
 
-        elif 'spec2d' not in scifile:
+        else:
             decker = headarr[1]['MASK']
             grating = headarr[1]['DISPERS1']
 
@@ -271,9 +271,6 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
         if grating == 'x1000':
             par['calibrations']['wavelengths']['reid_arxiv'] = 'mmt_binospec_1000.fits'
-
-
-
 
 
         #decker = self.get_meta_value(headarr, 'decker')
