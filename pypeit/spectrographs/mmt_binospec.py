@@ -103,6 +103,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         self.meta['dec'] = dict(ext=1, card='DEC')
         self.meta['target'] = dict(ext=1, card='OBJECT')
         self.meta['decker'] = dict(ext=1, card='MASK')
+
         self.meta['dichroic'] = dict(ext=1, card=None, default='default')
         self.meta['binning'] = dict(ext=1, card='CCDSUM', compound=True)
 
@@ -260,6 +261,9 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
         if grating == 'x1000':
             par['calibrations']['wavelengths']['reid_arxiv'] = 'mmt_binospec_1000.fits'
+
+        if 'spec2d' in scifile:
+            self.meta['decker'] = dict(ext=1, card='TARGET')
 
 
         header0 = fits.getheader(scifile)
