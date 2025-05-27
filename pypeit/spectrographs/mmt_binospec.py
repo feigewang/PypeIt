@@ -262,26 +262,37 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         if grating == 'x1000':
             par['calibrations']['wavelengths']['reid_arxiv'] = 'mmt_binospec_1000.fits'
 
+
+
+        headarr = self.get_headarr(scifile)
+
         if 'spec2d' in scifile:
-            self.meta['decker'] = dict(ext=1, card='TARGET')
+            decker = headarr[0]['TARGET']
+
+        elif:
+            decker = headarr[1]['MASK']
+
+        else:
+            msgs.warn('Could not find decker information in file header. '
+                      'Assuming longslit setup.')
+            decker = 'Longslit'
 
         header0 = fits.getheader(scifile)
         header1 = fits.getheader(scifile, 1)
 
-        headarr = self.get_headarr(scifile)
-        decker = self.get_meta_value(headarr, 'decker')
+        #decker = self.get_meta_value(headarr, 'decker')
 
         embed()
 
 
-        if 'DECKER' in header0.keys():
-            decker = header0['DECKER']
-        elif 'MASK' in header1.keys():
-            decker = header1['MASK']
-        else:
-            decker = 'Longslit'
-            msgs.warn(f'DECKER/TARGET info was not '
-                      f'found in {scifile}. Using longslit setup.')
+        #if 'DECKER' in header0.keys():
+            #decker = header0['DECKER']
+        #elif 'MASK' in header1.keys():
+            #decker = header1['MASK']
+        #else:
+            #decker = 'Longslit'
+            #msgs.warn(f'DECKER/TARGET info was not '
+                      #f'found in {scifile}. Using longslit setup.')
 
 
         if 'Longslit' not in decker:
