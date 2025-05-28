@@ -298,9 +298,6 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             # set offsets for coadd2d
             par['coadd2d']['offsets'] = 'maskdef_offsets'
 
-
-        embed()
-
         return par
 
     def update_edgetracepar(self, par):
