@@ -554,8 +554,9 @@ class Extract:
                         continue
                     # Interpolate
 
-                    from IPython import embed
-                    embed()
+                    #For debugging
+                    #from IPython import embed
+                    #embed()
                     if len(this_flex_dict['shift']) > 0 and this_flex_dict['shift'][ss] is not None:
                         new_sky = sobj.apply_spectral_flexure(this_flex_dict['shift'][ss],
                                                               this_flex_dict['sky_spec'][ss])
