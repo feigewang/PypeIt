@@ -636,6 +636,7 @@ def spec_flex_shift_local(slits, slitord, specobjs, islit, sky_file, empty_flex_
                   f"{flex_dict['shift'][idx_med_shift]:.3f} pixels, will be used")
 
         # assign the median shift to the failed objects
+
         for obj_idx in return_later_sobjs:
             # Update dict
             for key in keys_to_update[:-1]:
@@ -654,9 +655,15 @@ def spec_flex_shift_local(slits, slitord, specobjs, islit, sky_file, empty_flex_
     flex_list.append(flex_dict.copy())
 
     # Debug
-    # print("Entering embed in spec_flex_shift_local()")
-    # from IPython import embed
-    # embed()
+    print(f"----- Slit {islit} Flexure Summary -----")
+    print(f"  Total objects in slit: {len(this_specobjs)}")
+    print(f"  Successful shifts: {len(flex_dict['shift'])}")
+    print(f"  Failed object indices: {return_later_sobjs}")
+    print(f"  Final shift list: {flex_dict['shift']}")
+
+    print("Entering embed in spec_flex_shift_local()")
+    from IPython import embed
+    embed()
 
     return flex_list
 
@@ -816,20 +823,18 @@ def spec_flexure_slit(slits, slitord, slit_bpm, sky_file, method="boxcar", speco
                     i_slitord = slitord[sidx]
                     indx = specobjs.slitorder_indices(i_slitord)
 
-                    # Start fresh
-                    flex_dict = copy.deepcopy(empty_flex_dict)
-
-                    # Fill with repeated median values
                     for i in range(len(specobjs[indx])):
+                        # Reset the dict
+                        flex_dict = copy.deepcopy(empty_flex_dict)
+                        # Update dict
                         for key in keys_to_update[:-1]:
                             flex_dict[key].append(fdict[key][0])
-                        # Interpolate sky
+                        # Interpolate
                         sky_wave_new = flexure_interp(fdict['shift'][0], specobjs[indx][i].BOX_WAVE)
                         flex_dict['sky_spec'].append(
                             xspectrum1d.XSpectrum1D.from_tuple((sky_wave_new, specobjs[indx][i].BOX_COUNTS_SKY)))
-
-                    # Now update flex_list once
-                    flex_list[sidx] = flex_dict
+                        # insert flex_dict in flex_list at the location of the slit that failed the calculation
+                        flex_list[sidx] = flex_dict
 
             #Debug
             #print("Entering embed in spec_flex_shift()")
