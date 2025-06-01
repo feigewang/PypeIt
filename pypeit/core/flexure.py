@@ -824,10 +824,10 @@ def spec_flexure_slit(slits, slitord, slit_bpm, sky_file, method="boxcar", speco
                         # insert flex_dict in flex_list at the location of the slit that failed the calculation
                         flex_list[sidx] = flex_dict
 
-        #Debug
-        print("Entering embed in spec_flex_shift()")
-        from IPython import embed
-        embed()
+            #Debug
+            print("Entering embed in spec_flex_shift()")
+            from IPython import embed
+            embed()
 
 
 
