@@ -654,6 +654,14 @@ def spec_flex_shift_local(slits, slitord, specobjs, islit, sky_file, empty_flex_
     # Append flex_dict, which will be an empty dictionary if the flexure failed for the whole slit
     flex_list.append(flex_dict.copy())
 
+    from IPython import embed
+    if islit == 40:
+        print("Entering embed for at the end of spec_flex_shift_local ")
+        print("--------- Final return_later_slits ---------")
+        print(return_later_slits)
+        embed()
+
+
     # Debug
     #print(f"----- Slit {islit} Flexure Summary -----")
     #print(f"  Total objects in slit: {len(this_specobjs)}")
@@ -662,10 +670,10 @@ def spec_flex_shift_local(slits, slitord, specobjs, islit, sky_file, empty_flex_
     #print(f"  Final shift list: {flex_dict['shift']}")
 
     #print("Entering embed in spec_flex_shift_local()")
-    #from IPython import embed
-    #embed()
 
-    return flex_list
+
+    #Comment return to debug
+    #return flex_list
 
 
 def spec_flexure_slit(slits, slitord, slit_bpm, sky_file, method="boxcar", specobjs=None,
@@ -765,10 +773,13 @@ def spec_flexure_slit(slits, slitord, slit_bpm, sky_file, method="boxcar", speco
                                                minwave=minwave, maxwave=maxwave)
         else:
             # local flexure
-            flex_list = spec_flex_shift_local(slits, slitord, specobjs, islit, sky_file,
-                                              empty_flex_dict, return_later_slits, flex_list, keys_to_update,
-                                              spec_fwhm_pix=spec_fwhm_pix, mxshft=mxshft, excess_shft=excess_shft,
-                                               minwave=minwave, maxwave=maxwave)
+
+            #Try this to debug
+            #flex_list =
+            spec_flex_shift_local(slits, slitord, specobjs, islit, sky_file,
+                                  empty_flex_dict, return_later_slits, flex_list, keys_to_update,
+                                  spec_fwhm_pix=spec_fwhm_pix, mxshft=mxshft, excess_shft=excess_shft,
+                                  minwave=minwave, maxwave=maxwave)
 
     print("--------- Final return_later_slits ---------")
     print(return_later_slits)
