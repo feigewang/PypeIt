@@ -655,15 +655,15 @@ def spec_flex_shift_local(slits, slitord, specobjs, islit, sky_file, empty_flex_
     flex_list.append(flex_dict.copy())
 
     # Debug
-    print(f"----- Slit {islit} Flexure Summary -----")
-    print(f"  Total objects in slit: {len(this_specobjs)}")
-    print(f"  Successful shifts: {len(flex_dict['shift'])}")
-    print(f"  Failed object indices: {return_later_sobjs}")
-    print(f"  Final shift list: {flex_dict['shift']}")
+    #print(f"----- Slit {islit} Flexure Summary -----")
+    #print(f"  Total objects in slit: {len(this_specobjs)}")
+    #print(f"  Successful shifts: {len(flex_dict['shift'])}")
+    #print(f"  Failed object indices: {return_later_sobjs}")
+    #print(f"  Final shift list: {flex_dict['shift']}")
 
-    print("Entering embed in spec_flex_shift_local()")
-    from IPython import embed
-    embed()
+    #print("Entering embed in spec_flex_shift_local()")
+    #from IPython import embed
+    #embed()
 
     return flex_list
 
@@ -769,6 +769,11 @@ def spec_flexure_slit(slits, slitord, slit_bpm, sky_file, method="boxcar", speco
                                               empty_flex_dict, return_later_slits, flex_list, keys_to_update,
                                               spec_fwhm_pix=spec_fwhm_pix, mxshft=mxshft, excess_shft=excess_shft,
                                                minwave=minwave, maxwave=maxwave)
+
+    print("--------- Final return_later_slits ---------")
+    print(return_later_slits)
+    from IPython import embed
+    embed()
 
     # Check if we need to go back to some failed slits
     if len(return_later_slits) > 0:
