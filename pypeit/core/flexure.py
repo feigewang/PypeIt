@@ -653,6 +653,11 @@ def spec_flex_shift_local(slits, slitord, specobjs, islit, sky_file, empty_flex_
     # Append flex_dict, which will be an empty dictionary if the flexure failed for the whole slit
     flex_list.append(flex_dict.copy())
 
+    #Debug
+    print("Entering embed in spec_flex_shift_local()")
+    from IPython import embed
+    embed()
+
     return flex_list
 
 
