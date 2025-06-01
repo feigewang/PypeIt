@@ -653,11 +653,6 @@ def spec_flex_shift_local(slits, slitord, specobjs, islit, sky_file, empty_flex_
     # Append flex_dict, which will be an empty dictionary if the flexure failed for the whole slit
     flex_list.append(flex_dict.copy())
 
-    #Debug
-    print("Entering embed in spec_flex_shift_local()")
-    from IPython import embed
-    embed()
-
     return flex_list
 
 
@@ -828,6 +823,14 @@ def spec_flexure_slit(slits, slitord, slit_bpm, sky_file, method="boxcar", speco
                             xspectrum1d.XSpectrum1D.from_tuple((sky_wave_new, specobjs[indx][i].BOX_COUNTS_SKY)))
                         # insert flex_dict in flex_list at the location of the slit that failed the calculation
                         flex_list[sidx] = flex_dict
+
+        #Debug
+        print("Entering embed in spec_flex_shift()")
+        from IPython import embed
+        embed()
+
+
+
     return flex_list
 
 
