@@ -673,7 +673,7 @@ def spec_flex_shift_local(slits, slitord, specobjs, islit, sky_file, empty_flex_
 
 
     #Comment return to debug
-    #return flex_list
+    return flex_list
 
 
 def spec_flexure_slit(slits, slitord, slit_bpm, sky_file, method="boxcar", specobjs=None,
@@ -775,8 +775,7 @@ def spec_flexure_slit(slits, slitord, slit_bpm, sky_file, method="boxcar", speco
             # local flexure
 
             #Try this to debug
-            #flex_list =
-            spec_flex_shift_local(slits, slitord, specobjs, islit, sky_file,
+            flex_list = spec_flex_shift_local(slits, slitord, specobjs, islit, sky_file,
                                   empty_flex_dict, return_later_slits, flex_list, keys_to_update,
                                   spec_fwhm_pix=spec_fwhm_pix, mxshft=mxshft, excess_shft=excess_shft,
                                   minwave=minwave, maxwave=maxwave)
