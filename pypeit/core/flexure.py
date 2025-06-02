@@ -659,7 +659,7 @@ def spec_flex_shift_local(slits, slitord, specobjs, islit, sky_file, empty_flex_
         print("Entering embed for at the end of spec_flex_shift_local ")
         print("--------- Final return_later_slits ---------")
         print(return_later_slits)
-        embed()
+        #embed()
 
 
     # Debug
@@ -784,7 +784,7 @@ def spec_flexure_slit(slits, slitord, slit_bpm, sky_file, method="boxcar", speco
     print("--------- Final return_later_slits ---------")
     print(return_later_slits)
     from IPython import embed
-    embed()
+    #embed()
 
     # Check if we need to go back to some failed slits
     if len(return_later_slits) > 0:
