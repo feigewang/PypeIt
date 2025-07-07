@@ -302,7 +302,6 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
             if decker == 'J0226p0302_mask1_830':
                 par['coadd2d']['offsets'] = [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,0., 0., 0., 0., 0., 0., 0., 0., 0.]
-
             else:
                 par['coadd2d']['offsets'] = 'maskdef_offsets'
 
