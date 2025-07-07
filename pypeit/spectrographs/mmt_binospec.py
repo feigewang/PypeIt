@@ -297,7 +297,10 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             par['calibrations']['slitedges']['sync_predict'] = 'auto'
 
             # set offsets for coadd2d
+            embed()
+
             par['coadd2d']['offsets'] = 'maskdef_offsets'
+            par['coadd2d']['offsets'] = 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,0., 0., 0.,0., 0., 0.,0., 0., 0.
 
 
         return par
