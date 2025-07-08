@@ -299,6 +299,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             # pca
             par['calibrations']['slitedges']['sync_predict'] = 'auto'
 
+
             par['coadd2d']['offsets'] = 'maskdef_offsets'
 
 
