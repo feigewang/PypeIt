@@ -296,18 +296,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             # pca
             par['calibrations']['slitedges']['sync_predict'] = 'auto'
 
-            # set offsets for coadd2d
-            embed()
-
-
-            if decker == 'J0226p0302_mask1_830':
-                par['coadd2d']['offsets'] = [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,0., 0., 0., 0., 0., 0., 0., 0., 0.]
-            else:
-                par['coadd2d']['offsets'] = 'maskdef_offsets'
-
-
-
-
+            par['coadd2d']['offsets'] = 'maskdef_offsets'
 
         return par
 
