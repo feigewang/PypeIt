@@ -290,6 +290,9 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             par['reduce']['slitmask']['assign_obj'] = True
             # force extraction of undetected objects
             par['reduce']['slitmask']['extract_missing_objs'] = True
+            # Adjust sky subtraction parameters
+            par['reduce']['skysub']['local_maskwidth'] = 2.5
+            par['reduce']['skysub']['sky_sigrej'] = 4.0
             # lower tilts spat_order and higher spec_order for multislits (i.e., generally not very long slits)
             par['calibrations']['tilts']['spat_order'] = 2  # Default: 3
             par['calibrations']['tilts']['spec_order'] = 5  # Default: 4
@@ -297,6 +300,10 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             par['calibrations']['slitedges']['sync_predict'] = 'auto'
 
             par['coadd2d']['offsets'] = 'maskdef_offsets'
+
+
+
+
 
         return par
 
