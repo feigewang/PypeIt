@@ -285,7 +285,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             # Lower edge_thresh works better
             par['calibrations']['slitedges']['edge_thresh'] = 10.
             # use stars in alignment boxes to compute the slitmask offset (this works the best)
-            par['reduce']['slitmask']['use_alignbox'] = True
+            par['reduce']['slitmask']['use_alignbox'] = Truecal
             # Assign RA, DEC, OBJNAME to detected objects
             par['reduce']['slitmask']['assign_obj'] = True
             # force extraction of undetected objects
@@ -723,6 +723,8 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
         sortindx = np.argsort(bot_edges)
 
         # Return the left and right edges along with sorted indices and the slitmask
+
+        embed()
         return top_edges, bot_edges, sortindx, self.slitmask
 
     def get_rawimage(self, raw_file, det):
