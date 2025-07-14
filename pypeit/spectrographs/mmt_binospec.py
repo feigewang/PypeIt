@@ -303,8 +303,8 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
 
 
-
-
+        print("Enter embed in config_specific_par()")
+        embed()
         return par
 
     def update_edgetracepar(self, par):
@@ -724,7 +724,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
         # Return the left and right edges along with sorted indices and the slitmask
 
-
+        print("Enter embed in get_slitedges()")
         embed()
         return top_edges, bot_edges, sortindx, self.slitmask
 
