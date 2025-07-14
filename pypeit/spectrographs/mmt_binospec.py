@@ -724,6 +724,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
 
         # Return the left and right edges along with sorted indices and the slitmask
 
+
         embed()
         return top_edges, bot_edges, sortindx, self.slitmask
 
