@@ -677,7 +677,7 @@ class MMTBINOSPECSpectrograph(spectrograph.Spectrograph):
             raise ValueError("A valid slitmask filename must be provided.")
 
         # Call bino_get_slit_region_pix to get slit region information
-        region, slitmask = self.bino_get_slit_region_new(filename, ccdnum)
+        region, slitmask = self.bino_get_slit_region(filename, ccdnum)
 
         # region contains: [slit_x_range, slit_y_range, x_slitobj_pix, y_slitobj_pix]
         slit_x_range, slit_y_range, x_slitobj_pix, y_slitobj_pix = region
