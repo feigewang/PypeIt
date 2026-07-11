@@ -1672,7 +1672,7 @@ class SlicerIFUCoAdd3D(CoAdd3D):
                 else:
                     hdr['FLUXUNIT'] = (1, "Flux units -- counts/s/Angstrom/arcsec^2")
                 # Write out the datacube
-                log.info(f"Saving datacube at the native sampling of {self.specname.replace("_", " ")}: {outfile}")
+                #log.info(f"Saving datacube at the native sampling of {self.specname.replace("_", " ")}: {outfile}")
                 final_cube = DataCube(
                     flxcube, sigcube, bpmcube.astype(np.uint8),
                     wave, self.specname, self.blaze_wave, self.blaze_spec,
@@ -1712,7 +1712,7 @@ class SlicerIFUCoAdd3D(CoAdd3D):
             return [np.ones_like(sci) for sci in self.all_sci]
         else:
             # Calculate the relative spectral weights of all pixels
-            
+
             if self.cubepar['weights_init_obj_pos'] is not None and len(self.cubepar['weights_init_obj_pos']) > 0:
                 manual_dict= ManualCubeExtractionObj.parse(self.cubepar['weights_init_obj_pos']).to_dict()
                 init_obj_position = (manual_dict['spatx'][0], manual_dict['spaty'][0])
@@ -1906,7 +1906,7 @@ class SlicerIFUCoAdd3D(CoAdd3D):
 
             if self.combine:
                 sigrej = 3.0
-                maxiters = 10                
+                maxiters = 10
                 sci_list_out, var_list_out, combined_gpm, nused = combine.weighted_combine(
                     weightcube_stack, [flxcube_stack], [varcube_stack],
                     np.logical_not(bpmcube_stack), sigma_clip=True, sigma_clip_stack=flxcube_stack,
